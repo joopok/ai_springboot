@@ -53,11 +53,20 @@ public class NoticeController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createNotice(
-            @RequestBody Notice notice,
+            @RequestBody(required = true) Notice notice,
             @RequestAttribute(required = false) User user) {
-        log.info("Creating new notice by user: {}", user != null ? user.getUsername() : "anonymous");
-        noticeService.createNotice(notice);
-        return ResponseEntity.ok(ApiResponse.success(notice));
+        try {
+            log.info("Creating new notice by user: {}", user != null ? user.getUsername() : "anonymous");
+            log.debug("Notice content: {}", notice);
+            
+            Notice createdNotice = noticeService.createNotice(notice);
+            return ResponseEntity.ok(ApiResponse.success(createdNotice));
+            
+        } catch (Exception e) {
+            log.error("Error creating notice", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to create notice: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
