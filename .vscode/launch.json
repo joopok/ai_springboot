@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug Spring Boot Application",
+            "request": "launch",
+            "mainClass": "com.example.pm7.Pm7Application",
+            "projectName": "pm7-backend"
+        }
+    ]
+} 
