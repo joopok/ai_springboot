@@ -21,7 +21,7 @@ public class NoticeController {
 
     private final NoticeService noticeService;
 
-    @GetMapping
+    @PostMapping("/list")
     public ResponseEntity<?> getAllNotices(
             @RequestAttribute(required = false) User user) {
         try {
@@ -39,7 +39,7 @@ public class NoticeController {
         }
     }
 
-    @GetMapping("/{id}")
+    @PostMapping("/detail/{id}")
     public ResponseEntity<ApiResponse<Notice>> getNoticeById(
             @PathVariable Long id,
             @RequestAttribute(required = false) User loginUser) {
@@ -53,7 +53,7 @@ public class NoticeController {
         return ResponseEntity.ok(ApiResponse.success(notice));
     }
 
-    @PostMapping("/new")
+    @PostMapping("/create")
     public ResponseEntity<?> createNotice(
             @RequestBody Notice notice,
             @RequestAttribute(required = false) User user) {
@@ -77,7 +77,7 @@ public class NoticeController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @GetMapping("/test-db")
+    @PostMapping("/test")
     public String testDatabase() {
         try {
             log.info("Received request to test database connection");
