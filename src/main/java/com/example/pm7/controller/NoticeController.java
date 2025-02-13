@@ -3,75 +3,56 @@ package com.example.pm7.controller;
 import com.example.pm7.model.Notice;
 import com.example.pm7.service.NoticeService;
 import com.example.pm7.dto.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import com.example.pm7.model.User;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/notices")
-@Slf4j
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class NoticeController {
 
     private final NoticeService noticeService;
 
+    // POST 메서드로 공지사항 생성
     @PostMapping
-    public ResponseEntity<ApiResponse<List<Notice>>> getAllNotices(
-            @RequestAttribute(required = false) User loginUser) {
-        try {
-            log.info("=== getAllNotices 호출 시작 ===");
-            log.debug("User: {}", loginUser != null ? loginUser.getUsername() : "anonymous");
-
-            List<Notice> notices = noticeService.getAllNotices(loginUser);
-            log.info("=== getAllNotices 호출 완료. 조회된 공지사항 수: {} ===", notices.size());
-
-            return ResponseEntity.ok(ApiResponse.success(notices));
-        } catch (Exception e) {
-            log.error("getAllNotices 처리 중 오류 발생", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/{id}")
-    public ResponseEntity<ApiResponse<Notice>> getNoticeById(
-            @PathVariable Long id,
-            @RequestAttribute(required = false) User loginUser) {
-        log.info("Getting notice by id: {}, User: {}", id,
-                loginUser != null ? loginUser.getUsername() : "anonymous");
-        Notice notice = noticeService.getNoticeById(id, loginUser);
-        if (notice == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Notice not found"));
-        }
+    public ResponseEntity<ApiResponse<Notice>> createNotice(@RequestBody Notice notice) {
+        noticeService.create(notice);
         return ResponseEntity.ok(ApiResponse.success(notice));
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<Void>> createNotice(@RequestBody Notice notice) {
-        log.info("Creating new notice");
-        noticeService.createNotice(notice);
-        return ResponseEntity.ok(ApiResponse.success(null));
+    // GET 메서드로 모든 공지사항 조회
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Notice>>> getAllNotices() {
+        List<Notice> notices = noticeService.findAll();
+        return ResponseEntity.ok(ApiResponse.success(notices));
     }
 
+    // GET 메서드로 특정 ID의 공지사항 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Notice>> getNotice(@PathVariable Long id) {
+        Notice notice = noticeService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(notice));
+    }
+
+    // PUT 메서드로 공지사항 수정
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateNotice(@PathVariable Long id, @RequestBody Notice notice) {
-        log.info("Updating notice with id: {}", id);
-        notice.setId(id);
-        noticeService.updateNotice(notice);
-        return ResponseEntity.ok(ApiResponse.success(null));
+    public ResponseEntity<ApiResponse<Notice>> updateNotice(
+            @PathVariable Long id,
+            @RequestBody Notice notice) {
+        notice.setNoticeId(id);
+        noticeService.update(notice);
+        return ResponseEntity.ok(ApiResponse.success(notice));
     }
 
+    // DELETE 메서드로 공지사항 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteNotice(@PathVariable Long id) {
-        log.info("Deleting notice with id: {}", id);
-        noticeService.deleteNotice(id);
+        noticeService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

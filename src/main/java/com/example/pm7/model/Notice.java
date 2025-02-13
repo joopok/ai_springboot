@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class Notice {
-    private Long id;
+    private Long noticeId;
     private String title;
     private String content;
     private int readCount;

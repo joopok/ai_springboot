@@ -54,30 +54,34 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     @Transactional
-    public void createNotice(Notice notice) {
+    public void create(Notice notice) {
         noticeMapper.insert(notice);
     }
 
     @Override
+    public List<Notice> findAll() {
+        return noticeMapper.findAll();
+    }
+
+    @Override
+    public Notice findById(Long id) {
+        return noticeMapper.findById(id);
+    }
+
+    @Override
     @Transactional
-    public void updateNotice(Notice notice) {
+    public void update(Notice notice) {
         noticeMapper.update(notice);
     }
 
     @Override
     @Transactional
-    public void deleteNotice(Long id) {
+    public void delete(Long id) {
         noticeMapper.delete(id);
     }
 
+    @Override
     public void testDatabaseConnection() {
-        try {
-            log.info("Testing database connection...");
-            int result = noticeMapper.testConnection();
-            log.info("Database connection test result: {}", result);
-        } catch (Exception e) {
-            log.error("Database connection test failed", e);
-            throw e;
-        }
+        noticeMapper.testConnection();
     }
 } 
