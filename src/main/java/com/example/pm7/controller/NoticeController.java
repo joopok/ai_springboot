@@ -21,14 +21,14 @@ public class NoticeController {
 
     private final NoticeService noticeService;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<List<Notice>>> getAllNotices(
-            @RequestAttribute(required = false) User loginUser) {
+    @GetMapping
+    public ResponseEntity<?> getAllNotices(
+            @RequestAttribute(required = false) User user) {
         try {
             log.info("=== getAllNotices 호출 시작 ===");
-            log.debug("User: {}", loginUser != null ? loginUser.getUsername() : "anonymous");
+            log.debug("User: {}", user != null ? user.getUsername() : "anonymous");
 
-            List<Notice> notices = noticeService.getAllNotices(loginUser);
+            List<Notice> notices = noticeService.getAllNotices(user);
             log.info("=== getAllNotices 호출 완료. 조회된 공지사항 수: {} ===", notices.size());
 
             return ResponseEntity.ok(ApiResponse.success(notices));
@@ -39,7 +39,7 @@ public class NoticeController {
         }
     }
 
-    @PostMapping("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Notice>> getNoticeById(
             @PathVariable Long id,
             @RequestAttribute(required = false) User loginUser) {
@@ -53,9 +53,11 @@ public class NoticeController {
         return ResponseEntity.ok(ApiResponse.success(notice));
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<Void>> createNotice(@RequestBody Notice notice) {
-        log.info("Creating new notice");
+    @PostMapping("/new")
+    public ResponseEntity<?> createNotice(
+            @RequestBody Notice notice,
+            @RequestAttribute(required = false) User user) {
+        log.info("Creating new notice by user: {}", user != null ? user.getUsername() : "anonymous");
         noticeService.createNotice(notice);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
