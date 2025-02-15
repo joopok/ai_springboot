@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
-import com.example.pm7.model.User;
 
 import java.util.List;
 
@@ -22,12 +21,10 @@ public class NoticeController {
     private final NoticeService noticeService;
 
     @PostMapping("/list")
-    public ResponseEntity<?> getAllNotices(
-            @RequestAttribute(required = false) User user) {
+    public ResponseEntity<ApiResponse<List<Notice>>> getAllNotices() {
         try {
             log.info("=== getAllNotices 호출 시작 ===");
-            log.debug("User: {}", user != null ? user.getUsername() : "anonymous");
-            List<Notice> notices = noticeService.getAllNotices(user);
+            List<Notice> notices = noticeService.getAllNotices();
             log.info("=== getAllNotices 호출 완료. 조회된 공지사항 수: {} ===", notices.size());
             return ResponseEntity.ok(ApiResponse.success(notices));
         } catch (Exception e) {
@@ -38,12 +35,8 @@ public class NoticeController {
     }
 
     @PostMapping("/detail/{id}")
-    public ResponseEntity<ApiResponse<Notice>> getNoticeById(
-            @PathVariable Long id,
-            @RequestAttribute(required = false) User loginUser) {
-        log.info("Getting notice by id: {}, User: {}", id,
-                loginUser != null ? loginUser.getUsername() : "anonymous");
-        Notice notice = noticeService.getNoticeById(id, loginUser);
+    public ResponseEntity<ApiResponse<Notice>> getNotice(@PathVariable Long id) {
+        Notice notice = noticeService.findById(id);
         if (notice == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("Notice not found"));
@@ -52,37 +45,23 @@ public class NoticeController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createNotice(
-            @RequestBody(required = true) Notice notice,
-            @RequestAttribute(required = false) User user) {
-        try {
-            log.info("Creating new notice by user: {}", user != null ? user.getUsername() : "anonymous");
-            log.debug("Notice content: {}", notice);
-            
-            Notice createdNotice = noticeService.createNotice(notice);
-            return ResponseEntity.ok(ApiResponse.success(createdNotice));
-            
-        } catch (Exception e) {
-            log.error("Error creating notice", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to create notice: " + e.getMessage()));
-        }
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Notice>> updateNotice(
-            @PathVariable Long id,
-            @RequestBody Notice notice) {
-        log.info("Updating notice with id: {}", id);
-        notice.setId(id);
-        noticeService.updateNotice(notice);
+    public ResponseEntity<ApiResponse<Notice>> createNotice(@RequestBody Notice notice) {
+        noticeService.create(notice);
         return ResponseEntity.ok(ApiResponse.success(notice));
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<Notice>> updateNotice(
+            @PathVariable Long id,
+            @RequestBody Notice notice) {
+        notice.setNoticeId(id);
+        noticeService.update(notice);
+        return ResponseEntity.ok(ApiResponse.success(notice));
+    }
+
+    @PostMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteNotice(@PathVariable Long id) {
-        log.info("Deleting notice with id: {}", id);
-        noticeService.deleteNotice(id);
+        noticeService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

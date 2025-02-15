@@ -1,2 +1,25 @@
 .metadata/
 .settings/
+
+# Gradle
+build/
+
+# IntelliJ
+.idea/
+
+# Eclipse
+.project
+.classpath
+
+# VSCode
+.vscode/
+
+# target
+target/
+
+# logs
+logs/
+
+# temp
+temp/
+

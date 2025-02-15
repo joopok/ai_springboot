@@ -126,4 +126,33 @@ public class AuthController {
             return "No session found";
         }
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            HttpServletRequest request,
+            @RequestAttribute(required = false) User loginUser) {
+        try {
+            // 현재 세션 가져오기
+            HttpSession session = request.getSession(false);
+            String username = null;
+            
+            if (session != null) {
+                username = (String) session.getAttribute("username");
+                // 세션 무효화
+                session.invalidate();
+            }
+            
+            // 로그인한 사용자의 정보가 있으면 updated_at 업데이트
+            if (username != null) {
+                userService.logout(username);
+                log.info("User logged out successfully: {}", username);
+            }
+            
+            return ResponseEntity.ok(ApiResponse.success(null));
+        } catch (Exception e) {
+            log.error("Logout failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("로그아웃 처리 중 오류가 발생했습니다."));
+        }
+    }
 }

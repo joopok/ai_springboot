@@ -78,4 +78,10 @@ public class UserServiceImpl implements UserService {
         log.warn("=== 비밀번호 검증 실패 ===");
         throw new BadCredentialsException("Invalid username or password");
     }
+
+    @Override
+    @Transactional
+    public void logout(String username) {
+        userMapper.updateLastLogout(username);
+    }
 } 

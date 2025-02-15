@@ -61,8 +61,8 @@ mybatis:
   type-aliases-package: com.example.pm7.model  # 모델 클래스 패키지 추가
 
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-should-be-at-least-32-characters}
-  expiration: 86400000
+  secret: c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK
+  expiration: 86400000  # 24시간
   refresh-token-expiration: 604800000
 
 logging:

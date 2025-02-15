@@ -5,7 +5,7 @@
 
     <!-- 결과 매핑 정의 -->
     <resultMap id="NoticeWithAttachments" type="com.example.pm7.model.Notice">
-        <id property="id" column="id"/>
+        <result property="id" column="noticeId"/>
         <result property="title" column="title"/>
         <result property="content" column="content"/>
         <result property="readCount" column="read_count"/>
@@ -15,7 +15,7 @@
         <result property="isTop" column="is_top"/>
         <result property="loginRequired" column="login_required"/>
         <collection property="attachments" ofType="com.example.pm7.model.NoticeAttachment">
-            <id property="id" column="attachment_id"/>
+            <result property="id" column="attachment_id"/>
             <result property="noticeId" column="notice_id"/>
             <result property="fileName" column="file_name"/>
             <result property="filePath" column="file_path"/>

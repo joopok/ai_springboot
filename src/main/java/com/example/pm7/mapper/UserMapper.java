@@ -12,4 +12,5 @@ public interface UserMapper {
     User findById(Long id);  // ID로 사용자 조회
     void update(User user);  // 사용자 정보 수정
     void delete(Long id);  // 사용자 삭제
+    void updateLastLogout(String username);
 } 
