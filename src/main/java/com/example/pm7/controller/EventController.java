@@ -24,7 +24,7 @@ public class EventController {
         return ResponseEntity.ok(ApiResponse.success(event));
     }
 
-    @GetMapping
+    @PostMapping("list")
     public ResponseEntity<ApiResponse<List<Event>>> getAllEvents() {
         List<Event> events = eventService.findAll();
         return ResponseEntity.ok(ApiResponse.success(events));
@@ -44,7 +44,7 @@ public class EventController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Event>> updateEvent(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestBody Event event) {
         event.setEventId(id);
         eventService.update(event);
@@ -56,4 +56,4 @@ public class EventController {
         eventService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
-} 
+}

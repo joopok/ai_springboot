@@ -135,19 +135,23 @@ public class AuthController {
             // 현재 세션 가져오기
             HttpSession session = request.getSession(false);
             String username = null;
-            
+            log.error("Logout failed==========>");
             if (session != null) {
+                log.error("세션 무효화111==========>");
                 username = (String) session.getAttribute("username");
                 // 세션 무효화
+                log.error("세션 무효화222==========>");
                 session.invalidate();
             }
-            
+
+            log.error("시작 전 입니다. 로그인한 사용자의 정보가 있으면==========>");
             // 로그인한 사용자의 정보가 있으면 updated_at 업데이트
             if (username != null) {
+                log.error("로그인한 사용자의 정보가 있으면==========>");
                 userService.logout(username);
                 log.info("User logged out successfully: {}", username);
             }
-            
+
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
             log.error("Logout failed", e);
