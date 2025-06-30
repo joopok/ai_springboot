@@ -14,11 +14,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
-
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Enumeration;
 
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/api/auth")
 @Slf4j
@@ -32,44 +33,62 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {
         try {
-            log.info("Login attempt - Username: {}", loginRequest.getUsername());
-            User user = userService.authenticate(
-                    loginRequest.getUsername(),
-                    loginRequest.getPassword());
+            log.info("Login attempt - Username1: {}", loginRequest.getUsername1());
+            User user = userService.authenticate(loginRequest.getUsername1(), loginRequest.getPassword());
 
-            // User를 UserDetails로 변환
-            UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                    .username(user.getUsername())
-                    .password(user.getPassword())
-                    .roles(user.getRole())
-                    .build();
+            try {
+                // User를 UserDetails로 변환
+                // role이 null인 경우 기본값 "USER" 설정
+                String role = (user.getRole() != null) ? user.getRole() : "USER";
 
-            // JWT 토큰 생성
-            String token = jwtTokenUtil.generateToken(userDetails);
+                // "ROLE_" 접두사 처리 - Spring Security roles 메서드는 접두사가 없는 역할 이름 기대
+                String roleName = role;
+                if (role.startsWith("ROLE_")) {
+                    roleName = role.substring(5); // "ROLE_" 제거
+                }
 
-            // 세션 정보 저장
-            HttpSession session = request.getSession();
-            // name 필드가 없으므로 username을 대신 사용
-            session.setAttribute("name", user.getName());
-            session.setAttribute("username", user.getUsername());
-            session.setAttribute("email", user.getEmail());
-            session.setAttribute("role", user.getRole());
-            session.setAttribute("access_token", token);
+                log.debug("사용자 역할: 원본={}, 처리 후={}", role, roleName);
 
-            // 응답 데이터 구성
-            Map<String, Object> responseData = new HashMap<>();
-            responseData.put("name", user.getName());
-            responseData.put("username", user.getUsername());
-            responseData.put("email", user.getEmail());
-            responseData.put("role", user.getRole());
-            responseData.put("access_token", token);
+                UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getUsername1())
+                        .password(user.getPassword())
+                        .roles(roleName)
+                        .build();
 
-            log.info("Login successful for user: {}", user.getUsername());
-            return ResponseEntity.ok(ApiResponse.success(responseData));
+                // JWT 토큰 생성
+                String token = jwtTokenUtil.generateToken(userDetails);
+
+                // 세션 정보 저장
+                HttpSession session = request.getSession();
+                // name 필드가 없으므로 username을 대신 사용
+                session.setAttribute("name", user.getName());
+                session.setAttribute("username", user.getUsername());
+                session.setAttribute("username1", user.getUsername1());
+                session.setAttribute("email", user.getEmail());
+                session.setAttribute("role", role);
+                session.setAttribute("access_token", token);
+
+                // 응답 데이터 구성
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("name", user.getName());
+                responseData.put("username", user.getUsername());
+                responseData.put("username1", user.getUsername1());
+                responseData.put("email", user.getEmail());
+                responseData.put("role", role);
+                responseData.put("access_token", token);
+                responseData.put("status", "200");
+
+                log.info("Login successful for user: {}", user.getUsername1());
+                return ResponseEntity.ok(ApiResponse.success(responseData));
+            } catch (Exception e) {
+                log.error("로그인 처리 중 오류 발생: {}", e.getMessage(), e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ApiResponse.error("로그인 처리 중 오류가 발생했습니다: " + e.getMessage()));
+            }
 
         } catch (BadCredentialsException e) {
             log.warn("Login failed - Username: {}, Password: {}",
-                    loginRequest.getUsername(),
+                    loginRequest.getUsername1(),
                     loginRequest.getPassword());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("로그인 실패: 아이디 또는 비밀번호를 확인해주세요"));
@@ -97,6 +116,7 @@ public class AuthController {
             Map<String, Object> sessionInfo = new HashMap<>();
             sessionInfo.put("name", session.getAttribute("name"));
             sessionInfo.put("username", session.getAttribute("username"));
+            sessionInfo.put("username1", session.getAttribute("username1"));
             sessionInfo.put("email", session.getAttribute("email"));
             sessionInfo.put("role", session.getAttribute("role"));
             sessionInfo.put("token", session.getAttribute("token"));
@@ -135,16 +155,12 @@ public class AuthController {
             // 현재 세션 가져오기
             HttpSession session = request.getSession(false);
             String username = null;
-            log.error("Logout failed==========>");
             if (session != null) {
-                log.error("세션 무효화111==========>");
                 username = (String) session.getAttribute("username");
                 // 세션 무효화
-                log.error("세션 무효화222==========>");
                 session.invalidate();
             }
 
-            log.error("시작 전 입니다. 로그인한 사용자의 정보가 있으면==========>");
             // 로그인한 사용자의 정보가 있으면 updated_at 업데이트
             if (username != null) {
                 log.error("로그인한 사용자의 정보가 있으면==========>");

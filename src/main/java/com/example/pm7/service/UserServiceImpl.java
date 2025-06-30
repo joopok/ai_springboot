@@ -45,6 +45,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void update(User user) {
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        } else {
+            user.setPassword(null);
+        }
         userMapper.update(user);
     }
 
@@ -57,26 +62,36 @@ public class UserServiceImpl implements UserService {
     @Override
     public User authenticate(String username, String password) {
         User user = userMapper.findByUsername(username);
-        
+
         if (user == null) {
             log.warn("User not found: {}", username);
-            throw new BadCredentialsException("Invalid username or password");
+            throw new BadCredentialsException("아아디 또는 비밀번호가 일치하지 않습니다.....");
         }
 
         log.info("=== 비밀번호 검증 시작 ===");
         log.info("입력된 비밀번호: {}", password);
         log.info("DB 저장 비밀번호: {}", user.getPassword());
-        
-        boolean isMatch = passwordEncoder.matches(password, user.getPassword());
-        log.info("비밀번호 일치 여부: {}", isMatch);
-        
+
+        // 비밀번호 검증이 안되는 이유:
+        // 1. 저장된 비밀번호가 BCrypt로 인코딩되지 않았을 수 있음
+        // 2. 입력된 비밀번호와 저장된 비밀번호 형식이 다를 수 있음
+        // 3. passwordEncoder 빈이 제대로 주입되지 않았을 수 있음
+
+        boolean isMatch = false;
+        try {
+            isMatch = passwordEncoder.matches(password, user.getPassword());
+            log.info("비밀번호 검증 시도 결과: {}", isMatch);
+        } catch (Exception e) {
+            log.error("비밀번호 검증 중 오류 발생: {}", e.getMessage());
+        }
+
         if (isMatch) {
             log.info("=== 비밀번호 검증 성공 ===");
             return user;
         }
-        
+
         log.warn("=== 비밀번호 검증 실패 ===");
-        throw new BadCredentialsException("Invalid username or password");
+        throw new BadCredentialsException("로그인 실패:::::: 아이디 또는 비밀번호를 확인해주세요.");
     }
 
     @Override
@@ -84,4 +99,4 @@ public class UserServiceImpl implements UserService {
     public void logout(String username) {
         userMapper.updateLastLogout(username);
     }
-} 
+}

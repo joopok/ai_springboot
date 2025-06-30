@@ -1,4 +1,110 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "todo-tree.general.periodicRefreshInterval": 0,
+    "todo-tree.general.revealBehaviour": "start of todo",
+    "workbench.tree.renderIndentGuides": "always",
+    "workbench.tree.indent": 16,
+    "workbench.colorCustomizations": {
+        "tree.indentGuidesStroke": "#ff69b4",
+        "tree.tableOddRowsBackground": "#ff69b4",
+        "tree.inactiveIndentGuidesStroke": "#ff69b4" /* 핑크 색상으로 설정 */
+    },
+    "explorer.compactFolders": false,
+    "vscode_custom_css.imports": [
+        "file:///Users/doseunghyeon/vscode-custom.css"  // Mac 예시
+        // 또는 "file:///home/사용자이름/vscode-custom.css"  // Linux 예시
+    ],
+    "vscode_custom_css.policy": true
 }
+// {
+//     "window.zoomLevel": 2,
+//     "editor.fontSize": 12,
+//     "editor.fontFamily": "Fira Code, Menlo, monospace" , // 프로그래밍에 적합한 폰트
+//     "todo-tree.general.periodicRefreshInterval": 0,
+//     "todo-tree.general.revealBehaviour": "start of todo",
+//     "workbench.iconTheme": "material-icon-theme",
+//     "material-icon-theme.activeIconPack": "react_redux",  // React/Redux 아이콘 팩 활성화
+//     "material-icon-theme.saturation": 1,  // 아이콘 채도 (최대)
+//     "material-icon-theme.opacity": 1,  // 아이콘 투명도 (최대)
+//     "material-icon-theme.folders.associations": {
+//         // "store": "redux-store"  // 특정 폴더에 커스텀 아이콘 매핑 (필요 시 활성화)
+//     },
+//     "material-icon-theme.files.associations": {
+//         // "*.ts": "typescript"  // 특정 파일 확장자에 아이콘 매핑 (필요 시 활성화)
+//     },
+//     "workbench.tree.renderIndentGuides": "always",  // 항상 들여쓰기 가이드 표시
+//     "workbench.tree.indent": 16,
+//     "workbench.colorCustomizations": { // 전체 배경 및 기본 UI 색상 (블랙 핑크 테마 유지)
+//         "activityBar.background": "#000000",  // 사이드바 배경 (검정)
+//         "activityBar.foreground": "#ff69b4",  // 사이드바 아이콘 및 텍스트 (핑크)
+//         "activityBarBadge.background": "#ff69b4",  // 배지 배경 (핑크)
+//         "activityBarBadge.foreground": "#000000",  // 배지 텍스트 (검정)
+//         "sideBar.background": "#000000",  // 사이드바(Explorer) 배경을 완전 검은색으로 변경
+//         "sideBar.foreground": "#ffffff",  // 사이드바 텍스트 (흰색, 가독성 유지)
+//         "sideBarTitle.foreground": "#ff69b4",  // 사이드바 제목 (핑크)
+//         "statusBar.background": "#000000",  // 상태 바 배경 (검정)
+//         "statusBar.foreground": "#ff69b4",  // 상태 바 텍스트 (핑크)
+//         "statusBarItem.hoverBackground": "#ff69b488",  // 상태 바 항목 호버 (투명한 핑크)
+//         "titleBar.activeBackground": "#000000",  // 타이틀 바 배경 (검정)
+//         "titleBar.activeForeground": "#ff69b4",  // 타이틀 바 텍스트 (핑크)
+//         "titleBar.inactiveBackground": "#1a1a1a",  // 비활성 타이틀 바 (어두운 회색)
+//         "tab.activeBackground": "#000000",  // 활성 탭 배경 (검정)
+//         "tab.inactiveBackground": "#1a1a1a",  // 비활성 탭 배경 (어두운 회색)
+//         "tab.activeForeground": "#ff69b4",  // 활성 탭 텍스트 (핑크)
+//         "tab.inactiveForeground": "#ffffff",  // 비활성 탭 텍스트 (흰색)
+//         "editor.background": "#000000",  // 에디터 배경 (검정)
+//         "editor.foreground": "#ffffff",  // 에디터 텍스트 (흰색)
+//         "editorLineNumber.foreground": "#666666",  // 줄 번호 (회색)
+//         "tree.background": "#000000",  // 트리 뷰 배경을 검은색으로 변경
+//         "tree.foreground": "#ffffff",  // 트리 뷰 텍스트 (흰색)
+//         "tree.indentGuidesStroke": "#ff69b4",  // 트리 뷰 들여쓰기 가이드 (투명한 핑크, 시각적 조정 가능)
+//         "tree.inactiveIndentGuidesStroke": "#ff69b4",  // 비활성 들여쓰기 가이드 (투명한 핑크)
+//         "tree.tableOddRowsBackground": "#ff69b4",  // 테이블 홀수 행 배경 (투명한 핑크, 필요 시 조정)
+//         // 버튼 및 입력 필드
+//         "button.background": "#ff69b4",  // 버튼 배경 (핑크)
+//         "button.foreground": "#000000",  // 버튼 텍스트 (검정)
+//         "input.background": "#1a1a1a",  // 입력 필드 배경 (어두운 회색)
+//         "input.foreground": "#ffffff"  // 입력 필드 텍스트 (흰색)
+//     },
+//     "explorer.compactFolders": false,  // 폴더 컴팩트 모드 비활성화
+//     "editor.tokenColorCustomizations": {
+//         // 코드 구문 강조 (블랙 핑크 테마에 맞춤)
+//         "[Default Dark+]": {  // 기본 어두운 테마 기반으로 커스터마이징
+//             "comments": "#888888",  // 주석 (회색)
+//             "strings": "#ff69b4",  // 문자열 (핑크)
+//             "keywords": "#ff69b4",  // 키워드 (핑크)
+//             "functions": "#ff69b4",  // 함수 (핑크)
+//             "variables": "#ffffff",  // 변수 (흰색)
+//             "numbers": "#ff69b4",  // 숫자 (핑크)
+//             "types": "#ff69b4",  // 타입 (핑크)
+//             "textMateRules": [
+//                 {
+//                     "scope": "entity.name.function",
+//                     "settings": {
+//                         "foreground": "#ff69b4"
+//                     }
+//                 },
+//                 {
+//                     "scope": "support.function",
+//                     "settings": {
+//                         "foreground": "#ff69b4"
+//                     }
+//                 }
+//             ]
+//         }
+//     },
+//     "editor.minimap.background": "#000000",  // 미니맵 배경 (검정)
+//     "editor.minimap.foregroundOpacity": 0.3,  // 미니맵 투명도
+//     "editor.minimapSlider.background": "#ff69b488",  // 미니맵 슬라이더 (투명한 핑크)
+//     "editorBracketMatch.background": "#ff69b422",  // 괄호 매칭 배경 (투명한 핑크)
+//     "editorBracketMatch.border": "#ff69b4",  // 괄호 매칭 테두리 (핑크)
+//     "java.compile.nullAnalysis.mode": "automatic",  // Java 관련 설정 (원본 유지)
+//     "files.exclude": {
+//         ".git": true,
+//         "node_modules": true,
+//         "*.log": true,
+//         ".project":true,
+//         ".classpath":true,
+//     }
+// }

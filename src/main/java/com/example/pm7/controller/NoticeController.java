@@ -20,6 +20,18 @@ public class NoticeController {
 
     private final NoticeService noticeService;
 
+    @PostMapping("/mainList")
+    public ResponseEntity<ApiResponse<List<Notice>>> getMainNotices() {
+        try {
+            log.info("=== getMainNotices 호출 시작 ===");
+            List<Notice> notices = noticeService.getMainNotices();
+            return ResponseEntity.ok(ApiResponse.success(notices));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @PostMapping("/list")
     public ResponseEntity<ApiResponse<List<Notice>>> getAllNotices() {
         try {

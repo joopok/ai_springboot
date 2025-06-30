@@ -17,6 +17,19 @@ public class NoticeServiceImpl implements NoticeService {
     private final NoticeMapper noticeMapper;
 
     @Override
+    public List<Notice> getMainNotices() {
+        try {
+            List<Notice> notices = noticeMapper.findMain();
+            List<Notice> filteredNotices = notices.stream()
+                    .filter(notice -> !notice.isLoginRequired())
+                    .collect(Collectors.toList());
+            return filteredNotices;
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    @Override
     public List<Notice> getAllNotices() {
         try {
             log.info("=== getAllNotices 서비스 시작 ===");

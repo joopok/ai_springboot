@@ -3,12 +3,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.pm7.mapper.UserMapper">
     <select id="findByUsername" parameterType="string" resultType="com.example.pm7.model.User">
-        SELECT * FROM users WHERE username = #{username}
+        SELECT * FROM users WHERE username1 = #{username1}
     </select>
 
     <insert id="insert" parameterType="com.example.pm7.model.User">
-        INSERT INTO users (username, password, email, name, role, created_at, updated_at)
-        VALUES (#{username}, #{password}, #{email}, #{name}, #{role}, NOW(), NOW())
+        INSERT INTO users (username,username1, password, email, name, role, created_at, updated_at)
+        VALUES (#{username}, #{username1}, #{password}, #{email}, #{name}, #{role}, NOW(), NOW())
     </insert>
 
     <select id="findAll" resultType="com.example.pm7.model.User">
@@ -21,11 +21,14 @@
 
     <update id="update" parameterType="com.example.pm7.model.User">
         UPDATE users
-        SET username = #{username},
-            password = #{password},
-            email = #{email},
-            role = #{role},
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="username1 != null">username1 = #{username1},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="role != null">role = #{role},</if>
             updated_at = NOW()
+        </set>
         WHERE user_id = #{id}
     </update>
 
@@ -36,6 +39,6 @@
     <update id="updateLastLogout" parameterType="string">
         UPDATE users 
         SET updated_at = NOW()
-        WHERE username = #{username}
+        WHERE username1 = #{username1}
     </update>
 </mapper> 

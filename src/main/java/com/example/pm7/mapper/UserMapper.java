@@ -6,7 +6,7 @@ import java.util.List;
 
 @Mapper
 public interface UserMapper {
-    User findByUsername(String username);
+    User findByUsername(String username1);
     void insert(User user);
     List<User> findAll();  // 전체 사용자 조회
     User findById(Long id);  // ID로 사용자 조회

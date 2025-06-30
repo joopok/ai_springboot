@@ -6,6 +6,8 @@ import java.util.List;
 public interface NoticeService {
     void create(Notice notice);
 
+    List<Notice> getMainNotices();
+
     List<Notice> getAllNotices();
 
     Notice findById(Long id);
