@@ -76,11 +76,11 @@ public class AuthController {
                 responseData.put("status", "200");
 
                 log.info("Login successful for user: {}", user.getUsername());
-                return ResponseEntity.ok(ApiResponse.success(responseData));
+                return ResponseEntity.ok(ApiResponse.success(responseData, "로그인 정상 처리 되었습니다."));
             } catch (Exception e) {
                 log.error("로그인 처리 중 오류 발생: {}", e.getMessage(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(ApiResponse.error("로그인 처리 중 오류가 발생했습니다: " + e.getMessage()));
+                        .body(ApiResponse.error("로그인 처리 중 오류 발생 하였습니다."));
             }
 
         } catch (BadCredentialsException e) {
@@ -88,7 +88,7 @@ public class AuthController {
                     loginRequest.getUsername(),
                     loginRequest.getPassword());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("로그인 실패: 아이디 또는 비밀번호를 확인해주세요"));
+                    .body(ApiResponse.error("로그인 처리 중 오류 발생 하였습니다."));
         }
     }
 
