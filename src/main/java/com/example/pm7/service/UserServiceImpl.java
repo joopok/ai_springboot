@@ -97,6 +97,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void logout(String username) {
-        userMapper.updateLastLogout(username);
+        // 로그아웃 시간을 별도로 추적하지 않는 현재 DB 구조에 맞춰서
+        // 단순히 로그만 남기고 종료
+        log.info("사용자 로그아웃: {}", username);
+        // TODO: 필요시 last_logout 컬럼을 DB에 추가하고 해당 시간을 업데이트할 수 있음
     }
 }

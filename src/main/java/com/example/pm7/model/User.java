@@ -5,13 +5,13 @@ import java.time.LocalDateTime;
 
 @Data
 public class User {
-    private String name;
     private Long id;
     private String username;
-    private String username1;
     private String password;
     private String email;
+    private String fullName;
     private String role;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 } 

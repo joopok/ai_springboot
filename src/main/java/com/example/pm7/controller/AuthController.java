@@ -33,8 +33,8 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {
         try {
-            log.info("Login attempt - Username1: {}", loginRequest.getUsername1());
-            User user = userService.authenticate(loginRequest.getUsername1(), loginRequest.getPassword());
+            log.info("Login attempt - Username: {}", loginRequest.getUsername());
+            User user = userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
 
             try {
                 // User를 UserDetails로 변환
@@ -50,7 +50,7 @@ public class AuthController {
                 log.debug("사용자 역할: 원본={}, 처리 후={}", role, roleName);
 
                 UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                        .username(user.getUsername1())
+                        .username(user.getUsername())
                         .password(user.getPassword())
                         .roles(roleName)
                         .build();
@@ -60,25 +60,22 @@ public class AuthController {
 
                 // 세션 정보 저장
                 HttpSession session = request.getSession();
-                // name 필드가 없으므로 username을 대신 사용
-                session.setAttribute("name", user.getName());
+                session.setAttribute("name", user.getFullName());
                 session.setAttribute("username", user.getUsername());
-                session.setAttribute("username1", user.getUsername1());
                 session.setAttribute("email", user.getEmail());
                 session.setAttribute("role", role);
                 session.setAttribute("access_token", token);
 
                 // 응답 데이터 구성
                 Map<String, Object> responseData = new HashMap<>();
-                responseData.put("name", user.getName());
+                responseData.put("name", user.getFullName());
                 responseData.put("username", user.getUsername());
-                responseData.put("username1", user.getUsername1());
                 responseData.put("email", user.getEmail());
                 responseData.put("role", role);
                 responseData.put("access_token", token);
                 responseData.put("status", "200");
 
-                log.info("Login successful for user: {}", user.getUsername1());
+                log.info("Login successful for user: {}", user.getUsername());
                 return ResponseEntity.ok(ApiResponse.success(responseData));
             } catch (Exception e) {
                 log.error("로그인 처리 중 오류 발생: {}", e.getMessage(), e);
@@ -88,7 +85,7 @@ public class AuthController {
 
         } catch (BadCredentialsException e) {
             log.warn("Login failed - Username: {}, Password: {}",
-                    loginRequest.getUsername1(),
+                    loginRequest.getUsername(),
                     loginRequest.getPassword());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("로그인 실패: 아이디 또는 비밀번호를 확인해주세요"));
@@ -116,7 +113,6 @@ public class AuthController {
             Map<String, Object> sessionInfo = new HashMap<>();
             sessionInfo.put("name", session.getAttribute("name"));
             sessionInfo.put("username", session.getAttribute("username"));
-            sessionInfo.put("username1", session.getAttribute("username1"));
             sessionInfo.put("email", session.getAttribute("email"));
             sessionInfo.put("role", session.getAttribute("role"));
             sessionInfo.put("token", session.getAttribute("token"));

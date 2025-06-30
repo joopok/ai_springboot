@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://192.168.0.109:3306/pms7?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    url: jdbc:mariadb://192.168.0.109:3306/jobtracker?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: root
     password: ~Asy10131227
     hikari:
@@ -42,7 +42,7 @@ spring:
       cache-null-values: false
 
 server:
-  port: 8081
+  port: 8080
   tomcat:
     max-threads: 200
     min-spare-threads: 20
@@ -68,17 +68,20 @@ jwt:
 logging:
   level:
     root: INFO
-    com.zaxxer.hikari: DEBUG
+    com.zaxxer.hikari: WARN
     com.example.pm7: DEBUG
     org.springframework.web: WARN
-    org.springframework.jdbc: DEBUG
+    org.springframework.jdbc: TRACE
     org.mybatis: TRACE
     com.example.pm7.mapper: TRACE
     org.springframework.jdbc.core: TRACE
-    org.springframework.transaction: TRACE
+    org.springframework.transaction: DEBUG
     org.springframework.security: WARN
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.apache.ibatis: TRACE
+    org.apache.ibatis.executor: TRACE
+    org.apache.ibatis.executor.statement: TRACE
+    org.apache.ibatis.executor.parameter: TRACE
+    org.apache.ibatis.executor.resultset: TRACE
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" 
   file:

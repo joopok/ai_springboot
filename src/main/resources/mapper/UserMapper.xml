@@ -2,43 +2,117 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.pm7.mapper.UserMapper">
-    <select id="findByUsername" parameterType="string" resultType="com.example.pm7.model.User">
-        SELECT * FROM users WHERE username1 = #{username1}
+    
+    <!-- 로그인을 위한 사용자 조회 (username 또는 email로) -->
+    <select id="findByUsernameOrEmail" parameterType="string" resultType="com.example.pm7.model.User">
+        SELECT 
+            id,
+            username,
+            email,
+            password_hash as password,
+            full_name as fullName,
+            role,
+            status,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM users 
+        WHERE (username = #{usernameOrEmail} OR email = #{usernameOrEmail})
     </select>
 
-    <insert id="insert" parameterType="com.example.pm7.model.User">
-        INSERT INTO users (username,username1, password, email, name, role, created_at, updated_at)
-        VALUES (#{username}, #{username1}, #{password}, #{email}, #{name}, #{role}, NOW(), NOW())
+    <!-- username으로 사용자 조회 (기존 호환성) -->
+    <select id="findByUsername" parameterType="string" resultType="com.example.pm7.model.User">
+        SELECT 
+            id,
+            username,
+            email,
+            password_hash as password,
+            full_name as fullName,
+            role,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM users 
+        WHERE username = #{username}
+    </select>
+
+    <!-- ID로 사용자 조회 -->
+    <select id="findById" parameterType="long" resultType="com.example.pm7.model.User">
+        SELECT 
+            id,
+            username,
+            email,
+            password_hash as password,
+            full_name as fullName,
+            role,
+            status,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM users 
+        WHERE id = #{id}
+    </select>
+
+    <!-- 새 사용자 등록 -->
+    <insert id="insert" parameterType="com.example.pm7.model.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (
+            username, 
+            email, 
+            password_hash, 
+            full_name, 
+            role, 
+            status,
+            created_at, 
+            updated_at
+        )
+        VALUES (
+            #{username}, 
+            #{email}, 
+            #{password}, 
+            #{fullName}, 
+            COALESCE(#{role}, 'USER'),
+            COALESCE(#{status}, 'ACTIVE'),
+            NOW(), 
+            NOW()
+        )
     </insert>
 
-    <select id="findAll" resultType="com.example.pm7.model.User">
-        SELECT * FROM users
-    </select>
+    <!-- 마지막 로그인 시간 업데이트 (현재 DB 구조에 맞춤) -->
+    <update id="updateLastLogin" parameterType="long">
+        UPDATE users 
+        SET updated_at = NOW()
+        WHERE id = #{userId}
+    </update>
 
-    <select id="findById" parameterType="long" resultType="com.example.pm7.model.User">
-        SELECT * FROM users WHERE user_id = #{id}
-    </select>
-
+    <!-- 사용자 정보 업데이트 -->
     <update id="update" parameterType="com.example.pm7.model.User">
         UPDATE users
         <set>
             <if test="username != null">username = #{username},</if>
-            <if test="username1 != null">username1 = #{username1},</if>
-            <if test="password != null and password != ''">password = #{password},</if>
             <if test="email != null">email = #{email},</if>
+            <if test="password != null">password_hash = #{password},</if>
+            <if test="fullName != null">full_name = #{fullName},</if>
             <if test="role != null">role = #{role},</if>
             updated_at = NOW()
         </set>
-        WHERE user_id = #{id}
+        WHERE id = #{id}
     </update>
 
+    <!-- 모든 사용자 조회 -->
+    <select id="findAll" resultType="com.example.pm7.model.User">
+        SELECT 
+            id,
+            username,
+            email,
+            full_name as fullName,
+            role,
+            status,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM users
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 사용자 삭제 -->
     <delete id="delete" parameterType="long">
-        DELETE FROM users WHERE user_id = #{id}
+        DELETE FROM users WHERE id = #{id}
     </delete>
 
-    <update id="updateLastLogout" parameterType="string">
-        UPDATE users 
-        SET updated_at = NOW()
-        WHERE username1 = #{username1}
-    </update>
 </mapper> 
