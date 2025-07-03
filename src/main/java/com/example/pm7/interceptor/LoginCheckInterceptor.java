@@ -2,6 +2,7 @@ package com.example.pm7.interceptor;
 
 import lombok.extern.slf4j.Slf4j;
 import com.example.pm7.config.JwtTokenUtil;
+import com.example.pm7.service.TokenBlacklistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -16,6 +17,9 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+    
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     @Override
     public boolean preHandle(
@@ -33,6 +37,15 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
 
         try {
             String jwt = token.substring(7);
+            
+            // 블랙리스트 확인
+            if (tokenBlacklistService.isBlacklisted(jwt)) {
+                log.warn("=== 블랙리스트에 등록된 토큰 ===");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"Token has been revoked\"}");
+                return false;
+            }
+            
             String username = jwtTokenUtil.getUsernameFromToken(jwt);
             request.setAttribute("username", username);
             log.info("=== 토큰 검증 성공: {} ===", username);

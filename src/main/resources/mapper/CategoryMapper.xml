@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.pm7.mapper.CategoryMapper">
+    
+    <resultMap id="categoryResult" type="com.example.pm7.dto.CategoryDTO">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="slug" column="slug"/>
+        <result property="description" column="description"/>
+        <result property="icon" column="icon"/>
+        <result property="displayOrder" column="display_order"/>
+        <result property="isActive" column="is_active"/>
+        <result property="count" column="count"/>
+        <result property="onsiteCount" column="onsite_count"/>
+        <result property="remoteCount" column="remote_count"/>
+    </resultMap>
+    
+    <select id="findAllCategories" resultMap="categoryResult">
+        SELECT 
+            c.id,
+            c.name,
+            c.slug,
+            c.description,
+            c.icon,
+            c.display_order,
+            c.is_active,
+            COALESCE(project_stats.total_count, 0) as count,
+            COALESCE(project_stats.onsite_count, 0) as onsite_count,
+            COALESCE(project_stats.remote_count, 0) as remote_count
+        FROM categories c
+        LEFT JOIN (
+            SELECT 
+                category,
+                COUNT(*) as total_count,
+                SUM(CASE WHEN work_type = 'onsite' THEN 1 ELSE 0 END) as onsite_count,
+                SUM(CASE WHEN work_type = 'remote' THEN 1 ELSE 0 END) as remote_count
+            FROM (
+                SELECT 
+                    CASE 
+                        WHEN c2.slug IS NOT NULL THEN c2.slug 
+                        ELSE p.category 
+                    END as category,
+                    p.work_type 
+                FROM projects p
+                LEFT JOIN categories c2 ON p.category_id = c2.id
+                WHERE p.status = 'active'
+                UNION ALL
+                SELECT 
+                    CASE 
+                        WHEN c2.slug IS NOT NULL THEN c2.slug 
+                        ELSE p.category 
+                    END as category,
+                    'onsite' as work_type 
+                FROM projects p
+                LEFT JOIN categories c2 ON p.category_id = c2.id
+                WHERE p.status = 'active' AND p.work_type = 'hybrid'
+                UNION ALL
+                SELECT 
+                    CASE 
+                        WHEN c2.slug IS NOT NULL THEN c2.slug 
+                        ELSE p.category 
+                    END as category,
+                    'remote' as work_type 
+                FROM projects p
+                LEFT JOIN categories c2 ON p.category_id = c2.id
+                WHERE p.status = 'active' AND p.work_type = 'hybrid'
+            ) AS all_projects
+            GROUP BY category
+        ) AS project_stats ON c.slug = project_stats.category
+        WHERE c.is_active = TRUE
+        ORDER BY c.display_order ASC, c.id ASC
+    </select>
+    
+    <select id="findCategoryById" parameterType="Long" resultMap="categoryResult">
+        SELECT 
+            c.id,
+            c.name,
+            c.slug,
+            c.description,
+            c.icon,
+            c.display_order,
+            c.is_active,
+            COALESCE(project_stats.total_count, 0) as count,
+            COALESCE(project_stats.onsite_count, 0) as onsite_count,
+            COALESCE(project_stats.remote_count, 0) as remote_count
+        FROM categories c
+        LEFT JOIN (
+            SELECT 
+                CASE 
+                    WHEN c2.slug IS NOT NULL THEN c2.slug 
+                    ELSE p.category 
+                END as category,
+                COUNT(*) as total_count,
+                SUM(CASE WHEN p.work_type = 'onsite' THEN 1 ELSE 0 END) as onsite_count,
+                SUM(CASE WHEN p.work_type = 'remote' THEN 1 ELSE 0 END) as remote_count
+            FROM projects p
+            LEFT JOIN categories c2 ON p.category_id = c2.id
+            WHERE p.status = 'active'
+            GROUP BY category
+        ) AS project_stats ON c.slug = project_stats.category
+        WHERE c.id = #{id} AND c.is_active = TRUE
+    </select>
+    
+</mapper>

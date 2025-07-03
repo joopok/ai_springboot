@@ -70,4 +70,13 @@ public class JwtTokenUtil {
             return false;
         }
     }
+    
+    public Date getExpirationDateFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+    }
 }  

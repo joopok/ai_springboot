@@ -1,104 +1,129 @@
 spring:
+  application:
+    name: jobkorea-billboard-backend
+  
+  # Database Configuration
   datasource:
-    driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://192.168.0.109:3306/jobtracker?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    url: jdbc:mariadb://192.168.0.109:3306/jobtracker
     username: root
-    password: ~Asy10131227
+    password: 
+    driver-class-name: org.mariadb.jdbc.Driver
     hikari:
       maximum-pool-size: 20
-      minimum-idle: 10
-      idle-timeout: 300000
-      connection-timeout: 20000
-      validation-timeout: 5000
-      max-lifetime: 1200000
-      connection-test-query: SELECT 1
-      connection-init-sql: SET NAMES utf8mb4
-      data-source-properties:
-        useUnicode: true
-        characterEncoding: UTF-8
-        cachePrepStmts: true
-        prepStmtCacheSize: 250
-        prepStmtCacheSqlLimit: 2048
-        useServerPrepStmts: true
-
-  mvc:
-    pathmatch:
-      matching-strategy: ANT_PATH_MATCHER
-
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
-
-  security:
-    user:
-      name: ${ADMIN_USERNAME:admin}
-      password: ${ADMIN_PASSWORD:admin}
-
-  cache:
-    type: redis
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  
+  # Redis Configuration (Optional - for session management)
+  data:
     redis:
-      time-to-live: 3600000
-      cache-null-values: false
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  
+  # JPA/Hibernate (disabled since we're using MyBatis)
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  
+  # Jackson Configuration
+  jackson:
+    default-property-inclusion: non-null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
 
-server:
-  port: 8080
-  tomcat:
-    max-threads: 200
-    min-spare-threads: 20
-    max-connections: 10000
-    accept-count: 100
-  compression:
-    enabled: true
-    mime-types: application/json,application/xml,text/html,text/plain
-    min-response-size: 2048
-
+# MyBatis Configuration - PM7 프로젝트용
 mybatis:
-  mapper-locations: classpath:mapper/**/*.xml
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.pm7.model
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # SQL 로그 출력
-  type-aliases-package: com.example.pm7.model  # 모델 클래스 패키지 추가
+    default-fetch-size: 100
+    default-statement-timeout: 30
+    use-generated-keys: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  error:
+    whitelabel:
+      enabled: false
+
+# JWT Configuration - PM7 프로젝트용
 jwt:
-  secret: c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK
-  expiration: 86400000  # 24시간
-  refresh-token-expiration: 604800000
+  secret: am9ia29yZWEtYmlsbGJvYXJkLXNlY3JldC1rZXktMjAyNC12ZXJ5LWxvbmctc2VjcmV0LWZvci1qd3Qtc2lnbmluZw==  # Base64 encoded secret
+  expiration: 86400000  # 24 hours in milliseconds
+  refresh-expiration: 604800000  # 7 days in milliseconds
 
+# Security Configuration
+security:
+  jwt:
+    secret: jobkorea-billboard-secret-key-2024-very-long-secret-for-jwt-signing
+    expiration: 2592000000  # 30 days in milliseconds
+    refresh-expiration: 7776000000  # 90 days in milliseconds
+
+# CORS Configuration
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://127.0.0.1:3000
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true
+  max-age: 3600
+
+# Logging Configuration - PM7 프로젝트용
 logging:
   level:
-    root: INFO
-    com.zaxxer.hikari: WARN
     com.example.pm7: DEBUG
-    org.springframework.web: WARN
-    org.springframework.jdbc: TRACE
-    org.mybatis: TRACE
-    com.example.pm7.mapper: TRACE
-    org.springframework.jdbc.core: TRACE
-    org.springframework.transaction: DEBUG
-    org.springframework.security: WARN
-    org.apache.ibatis: TRACE
-    org.apache.ibatis.executor: TRACE
-    org.apache.ibatis.executor.statement: TRACE
-    org.apache.ibatis.executor.parameter: TRACE
-    org.apache.ibatis.executor.resultset: TRACE
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.mybatis: DEBUG
   pattern:
-    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" 
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
-    name: logs/application.log
-    max-size: 10MB
-    max-history: 30
+    name: logs/pm7-application.log
 
-file:
+# Management/Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Custom Application Properties
+app:
+  name: JobKorea Billboard Backend
+  version: 1.0.0
+  description: JobKorea Billboard 백엔드 API 서버
   upload:
-    path: /uploads/notice 
-
-# SpringDoc 설정 추가
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operationsSorter: method
-    tagsSorter: alpha
-  show-actuator: true 
+    path: uploads/
+    max-file-size: 10MB
+    max-request-size: 50MB

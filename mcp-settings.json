@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "mariadb": {
+      "command": "node",
+      "args": ["./mariadb-mcp-server/dist/index.js"],
+      "env": {
+        "MARIADB_HOST": "192.168.0.109",
+        "MARIADB_PORT": "3306",
+        "MARIADB_USER": "root",
+        "MARIADB_PASSWORD": "~Asy10131227",
+        "MARIADB_DATABASE": "jobtracker",
+        "MARIADB_ALLOW_INSERT": "true",
+        "MARIADB_ALLOW_UPDATE": "true",
+        "MARIADB_ALLOW_DELETE": "true",
+        "MARIADB_TIMEOUT_MS": "20000"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+} 

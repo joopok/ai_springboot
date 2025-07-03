@@ -25,7 +25,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeRequests(auth -> auth
                 .antMatchers("/api/**").permitAll()  // 개발 중에는 모든 API 접근 허용
-                .anyRequest().authenticated()
+                .anyRequest().permitAll() // 모든 요청 허용
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

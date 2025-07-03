@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.pm7.mapper.FreelancerMapper">
+
+    <!-- Freelancer ResultMap -->
+    <resultMap id="FreelancerResultMap" type="com.example.pm7.model.Freelancer">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userFullName" column="name"/>
+        <result property="userEmail" column="user_email"/>
+        <result property="title" column="title"/>
+        <result property="freelancerType" column="freelancer_type"/>
+        <result property="description" column="description"/>
+        <result property="skills" column="skills"/>
+        <result property="experienceYears" column="experience_years"/>
+        <result property="experienceLevel" column="experience_level"/>
+        <result property="hourlyRate" column="hourly_rate"/>
+        <result property="availability" column="availability"/>
+        <result property="preferredWorkType" column="work_preference"/>
+        <result property="portfolioUrl" column="portfolio_url"/>
+        <result property="githubUrl" column="github_url"/>
+        <result property="linkedinUrl" column="linkedin_url"/>
+        <result property="rating" column="rating"/>
+        <result property="totalReviews" column="total_reviews"/>
+        <result property="completedProjects" column="total_projects"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="projectCount" column="project_count"/>
+        <result property="isVerified" column="is_verified"/>
+        <result property="verificationDate" column="verification_date"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 기본 컬럼 -->
+    <sql id="BaseColumns">
+        f.id,
+        f.user_id,
+        u.username as user_name,
+        u.name as name,
+        u.email as user_email,
+        f.title,
+        f.freelancer_type,
+        f.description,
+        f.skills,
+        f.experience_years,
+        f.experience_level,
+        f.hourly_rate,
+        f.availability,
+        f.work_preference as preferred_work_type,
+        f.portfolio_url,
+        f.github_url,
+        f.linkedin_url,
+        f.rating,
+        f.total_reviews,
+        f.total_projects as completed_projects,
+        f.total_projects as project_count,
+        f.view_count,
+        f.is_verified,
+        f.verification_date,
+        f.created_at,
+        f.updated_at
+    </sql>
+
+    <!-- 기본 조인 -->
+    <sql id="BaseJoins">
+        FROM freelancers f
+        INNER JOIN users u ON f.user_id = u.id
+        WHERE u.status = 'active' AND u.is_active = TRUE
+    </sql>
+
+    <!-- 검색 조건 -->
+    <sql id="SearchConditions">
+        <if test="params != null">
+            <if test="params.search != null and params.search != ''">
+                AND (
+                    f.title LIKE CONCAT('%', #{params.search}, '%')
+                    OR f.description LIKE CONCAT('%', #{params.search}, '%')
+                    OR u.name LIKE CONCAT('%', #{params.search}, '%')
+                    OR JSON_SEARCH(f.skills, 'one', CONCAT('%', #{params.search}, '%')) IS NOT NULL
+                )
+            </if>
+            
+            
+            <if test="params.experienceRange != null and params.experienceRange != ''">
+                <choose>
+                    <when test="params.experienceRange == '3년이하'">
+                        AND f.experience_years &lt;= 3
+                    </when>
+                    <when test="params.experienceRange == '6년이하'">
+                        AND f.experience_years &lt;= 6
+                    </when>
+                    <when test="params.experienceRange == '10년이하'">
+                        AND f.experience_years &lt;= 10
+                    </when>
+                    <when test="params.experienceRange == '10년초과'">
+                        AND f.experience_years &gt; 10
+                    </when>
+                </choose>
+            </if>
+            
+            
+            <if test="params.experience != null and params.experience != ''">
+                AND f.experience_level = #{params.experience}
+            </if>
+            
+            <if test="params.skills != null and params.skills.size() > 0">
+                AND (
+                    <foreach collection="params.skills" item="skill" separator=" OR ">
+                        JSON_SEARCH(f.skills, 'one', #{skill}) IS NOT NULL
+                    </foreach>
+                )
+            </if>
+            
+            <if test="params.minRating != null">
+                AND f.rating >= #{params.minRating}
+            </if>
+            
+            <if test="params.maxRating != null">
+                AND f.rating &lt;= #{params.maxRating}
+            </if>
+            
+            <if test="params.minHourlyRate != null">
+                AND f.hourly_rate >= #{params.minHourlyRate}
+            </if>
+            
+            <if test="params.maxHourlyRate != null">
+                AND f.hourly_rate &lt;= #{params.maxHourlyRate}
+            </if>
+            
+            <if test="params.verifiedOnly != null and params.verifiedOnly == true">
+                AND f.is_verified = true
+            </if>
+            
+            <if test="params.availability != null and params.availability != ''">
+                AND f.availability = #{params.availability}
+            </if>
+            
+            <if test="params.freelancerType != null and params.freelancerType != '' and params.freelancerType != '전체'">
+                AND f.freelancer_type = #{params.freelancerType}
+            </if>
+        </if>
+    </sql>
+
+    <!-- 정렬 조건 -->
+    <sql id="OrderByClause">
+        ORDER BY
+        <choose>
+            <when test="params != null and params.sortBy == 'rating'">
+                f.rating DESC
+            </when>
+            <when test="params != null and params.sortBy == 'experience'">
+                f.experience_years DESC
+            </when>
+            <when test="params != null and params.sortBy == 'viewCount'">
+                f.view_count DESC
+            </when>
+            <when test="params != null and params.sortBy == 'projectCount'">
+                f.total_projects DESC
+            </when>
+            <when test="params != null and params.sortBy == 'hourlyRate'">
+                f.hourly_rate
+            </when>
+            <when test="params != null and params.sortBy == 'createdAt'">
+                f.created_at
+            </when>
+            <otherwise>
+                f.created_at
+            </otherwise>
+        </choose>
+        
+        <choose>
+            <when test="params != null and params.sortOrder == 'asc'">
+                ASC
+            </when>
+            <otherwise>
+                DESC
+            </otherwise>
+        </choose>
+    </sql>
+
+    <!-- 전체 프리랜서 목록 조회 -->
+    <select id="findAll" parameterType="map" resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        <include refid="SearchConditions"/>
+        <include refid="OrderByClause"/>
+        
+        <if test="params.limit != null and params.offset != null">
+            LIMIT #{params.limit} OFFSET #{params.offset}
+        </if>
+    </select>
+
+    <!-- 프리랜서 목록 조회 -->
+    <select id="findFreelancers" parameterType="map" 
+            resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        <include refid="SearchConditions"/>
+        <include refid="OrderByClause"/>
+        
+        <if test="page != null and pageSize != null">
+            LIMIT #{pageSize} OFFSET #{page}
+        </if>
+    </select>
+
+    <!-- 전체 프리랜서 수 조회 -->
+    <select id="countAll" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        <include refid="BaseJoins"/>
+        <include refid="SearchConditions"/>
+    </select>
+
+    <!-- 프리랜서 총 개수 조회 -->
+    <select id="countFreelancers" parameterType="map" 
+            resultType="long">
+        SELECT COUNT(*)
+        <include refid="BaseJoins"/>
+        <include refid="SearchConditions"/>
+    </select>
+
+    <!-- ID로 프리랜서 상세 조회 -->
+    <select id="findById" parameterType="long" resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        AND f.id = #{id}
+    </select>
+
+    <!-- 사용자 ID로 프리랜서 조회 -->
+    <select id="findByUserId" parameterType="long" resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        AND f.user_id = #{userId}
+    </select>
+
+    <!-- ID로 프리랜서 상세 조회 (기존 호환성) -->
+    <select id="findFreelancerById" parameterType="long" resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        AND f.id = #{id}
+    </select>
+
+    <!-- 사용자 ID로 프리랜서 조회 (기존 호환성) -->
+    <select id="findFreelancerByUserId" parameterType="long" resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        AND f.user_id = #{userId}
+    </select>
+
+    <!-- 프리랜서 정보 등록 -->
+    <insert id="insert" parameterType="com.example.pm7.model.Freelancer" 
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO freelancers (
+            user_id, title, description, skills, experience_years, experience_level,
+            hourly_rate, availability, work_preference, portfolio_url, github_url,
+            linkedin_url, rating, total_reviews, total_projects, is_verified,
+            created_at, updated_at
+        ) VALUES (
+            #{userId}, #{title}, #{description}, 
+            #{skills},
+            #{experienceYears}, #{experienceLevel}, #{hourlyRate}, #{availability},
+            #{preferredWorkType}, #{portfolioUrl}, #{githubUrl}, #{linkedinUrl},
+            #{rating}, #{totalReviews}, #{completedProjects}, #{isVerified},
+            NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 프리랜서 정보 생성 (기존 호환성) -->
+    <insert id="insertFreelancer" parameterType="com.example.pm7.model.Freelancer" 
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO freelancers (
+            user_id, title, description, skills, experience_years, experience_level,
+            hourly_rate, availability, work_preference, portfolio_url, github_url,
+            linkedin_url, rating, total_reviews, total_projects, is_verified,
+            created_at, updated_at
+        ) VALUES (
+            #{userId}, #{title}, #{description}, 
+            #{skills},
+            #{experienceYears}, #{experienceLevel}, #{hourlyRate}, #{availability},
+            #{preferredWorkType}, #{portfolioUrl}, #{githubUrl}, #{linkedinUrl},
+            #{rating}, #{totalReviews}, #{completedProjects}, #{isVerified},
+            NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 프리랜서 정보 수정 -->
+    <update id="update" parameterType="com.example.pm7.model.Freelancer">
+        UPDATE freelancers 
+        SET 
+            title = #{title},
+            description = #{description},
+            skills = #{skills},
+            experience_years = #{experienceYears},
+            experience_level = #{experienceLevel},
+            hourly_rate = #{hourlyRate},
+            availability = #{availability},
+            work_preference = #{preferredWorkType},
+            portfolio_url = #{portfolioUrl},
+            github_url = #{githubUrl},
+            linkedin_url = #{linkedinUrl},
+            is_verified = #{isVerified},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 프리랜서 정보 수정 (기존 호환성) -->
+    <update id="updateFreelancer" parameterType="com.example.pm7.model.Freelancer">
+        UPDATE freelancers 
+        SET 
+            title = #{title},
+            description = #{description},
+            skills = #{skills},
+            experience_years = #{experienceYears},
+            experience_level = #{experienceLevel},
+            hourly_rate = #{hourlyRate},
+            availability = #{availability},
+            work_preference = #{preferredWorkType},
+            portfolio_url = #{portfolioUrl},
+            github_url = #{githubUrl},
+            linkedin_url = #{linkedinUrl},
+            is_verified = #{isVerified},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 프리랜서 정보 삭제 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM freelancers WHERE id = #{id}
+    </delete>
+
+    <!-- 프리랜서 정보 삭제 (기존 호환성) -->
+    <delete id="deleteFreelancer" parameterType="long">
+        DELETE FROM freelancers WHERE id = #{id}
+    </delete>
+
+    <!-- 조회수 증가 -->
+    <update id="incrementViewCount" parameterType="long">
+        UPDATE freelancers 
+        SET view_count = view_count + 1,
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 평점 업데이트 -->
+    <update id="updateRating">
+        UPDATE freelancers 
+        SET 
+            rating = #{rating},
+            total_reviews = #{reviewCount},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 완료 프로젝트 수 증가 -->
+    <update id="incrementCompletedProjects" parameterType="long">
+        UPDATE freelancers 
+        SET 
+            total_projects = total_projects + 1,
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 인기 프리랜서 목록 -->
+    <select id="findTopRatedFreelancers" parameterType="int" resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        AND f.rating >= 4.0
+        ORDER BY f.rating DESC, f.total_reviews DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 최근 등록된 프리랜서 목록 -->
+    <select id="findRecentFreelancers" parameterType="int" resultMap="FreelancerResultMap">
+        SELECT 
+        <include refid="BaseColumns"/>
+        <include refid="BaseJoins"/>
+        ORDER BY f.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 기술 스택별 통계 -->
+    <select id="getSkillStatistics" resultType="map">
+        SELECT 
+            skill_name,
+            COUNT(*) as freelancer_count
+        FROM (
+            SELECT JSON_UNQUOTE(JSON_EXTRACT(skills, CONCAT('$[', n.digit, ']'))) as skill_name
+            FROM freelancers f
+            CROSS JOIN (
+                SELECT 0 as digit UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION 
+                SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION 
+                SELECT 8 UNION SELECT 9
+            ) n
+            WHERE JSON_EXTRACT(skills, CONCAT('$[', n.digit, ']')) IS NOT NULL
+        ) skill_list
+        WHERE skill_name IS NOT NULL
+        GROUP BY skill_name
+        ORDER BY freelancer_count DESC
+        LIMIT 20
+    </select>
+
+    <!-- 경력별 통계 -->
+    <select id="getExperienceStatistics" resultType="map">
+        SELECT 
+            experience_level,
+            COUNT(*) as freelancer_count,
+            AVG(rating) as avg_rating,
+            AVG(hourly_rate) as avg_hourly_rate
+        FROM freelancers 
+        GROUP BY experience_level
+        ORDER BY 
+            CASE experience_level
+                WHEN 'junior' THEN 1
+                WHEN 'mid' THEN 2
+                WHEN 'senior' THEN 3
+                WHEN 'expert' THEN 4
+                ELSE 5
+            END
+    </select>
+
+    <!-- 프리랜서 타입별 통계 -->
+    <select id="getFreelancerTypeStatistics" resultType="map">
+        SELECT 
+            freelancer_type,
+            COUNT(*) as freelancer_count,
+            AVG(rating) as avg_rating,
+            AVG(hourly_rate) as avg_hourly_rate
+        FROM freelancers 
+        WHERE freelancer_type IS NOT NULL
+        GROUP BY freelancer_type
+        ORDER BY freelancer_count DESC
+    </select>
+
+    <select id="freelancerSkillList" resultType="string">
+        SELECT JSON_UNQUOTE(JSON_EXTRACT(f.skills, CONCAT('$[', n.digit, ']'))) AS skill,
+         COUNT(*) AS skill_count
+        FROM freelancers f
+        CROSS JOIN (
+            SELECT 0 AS digit UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL
+            SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL
+            SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL
+            SELECT 15 UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL
+            SELECT 20 UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23 UNION ALL SELECT 24 UNION ALL
+            SELECT 25 UNION ALL SELECT 26 UNION ALL SELECT 27 UNION ALL SELECT 28 UNION ALL SELECT 29 UNION ALL
+            SELECT 30 UNION ALL SELECT 31 UNION ALL SELECT 32 UNION ALL SELECT 33 UNION ALL SELECT 34 UNION ALL
+            SELECT 35 UNION ALL SELECT 36 UNION ALL SELECT 37 UNION ALL SELECT 38 UNION ALL SELECT 39 UNION ALL
+            SELECT 40 UNION ALL SELECT 41 UNION ALL SELECT 42 UNION ALL SELECT 43 UNION ALL SELECT 44 UNION ALL
+            SELECT 45 UNION ALL SELECT 46 UNION ALL SELECT 47 UNION ALL SELECT 48 UNION ALL SELECT 49 UNION ALL
+            SELECT 50 UNION ALL SELECT 51 UNION ALL SELECT 52 UNION ALL SELECT 53 UNION ALL SELECT 54 UNION ALL
+            SELECT 55 UNION ALL SELECT 56 UNION ALL SELECT 57 UNION ALL SELECT 58 UNION ALL SELECT 59 UNION ALL
+            SELECT 60 UNION ALL SELECT 61 UNION ALL SELECT 62 UNION ALL SELECT 63 UNION ALL SELECT 64 UNION ALL
+            SELECT 65 UNION ALL SELECT 66 UNION ALL SELECT 67 UNION ALL SELECT 68 UNION ALL SELECT 69 UNION ALL
+            SELECT 61 UNION ALL SELECT 62 UNION ALL SELECT 63 UNION ALL SELECT 64 UNION ALL SELECT 65 UNION ALL
+            SELECT 66 UNION ALL SELECT 67 UNION ALL SELECT 68 UNION ALL SELECT 69 UNION ALL SELECT 70
+        ) n
+        WHERE JSON_EXTRACT(f.skills, CONCAT('$[', n.digit, ']')) IS NOT NULL
+        GROUP BY skill
+        ORDER BY skill_count DESC
+        LIMIT 20;
+    </select>
+</mapper>

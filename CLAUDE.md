@@ -4,337 +4,218 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Spring Boot 2.7.0 backend application (PM7) using MyBatis for database operations with MariaDB. The project includes JWT authentication, RESTful APIs for notices and events, and uses Gradle as the build tool.
+PM7 is a Spring Boot 2.7.0 freelancer marketplace platform connecting freelancers with projects. It uses MyBatis for database operations with MariaDB, JWT authentication, and provides RESTful APIs for managing freelancers, categories, projects, and user authentication.
 
 ## Essential Commands
 
 ### Running the Application
 ```bash
-# Start server on port 8080 (background)
-nohup ./gradlew bootRun > application.log 2>&1 &
-
-# Start server on port 8080 (foreground)
+# Start server on ports 8080 and 8081 (foreground)
 ./gradlew bootRun
 
+# Start server with background logging
+nohup ./gradlew bootRun > application.log 2>&1 &
+
 # Kill existing server before restart
-lsof -ti :8080 | xargs kill -9 && ./gradlew bootRun
+lsof -ti :8080 :8081 | xargs kill -9 && ./gradlew bootRun
 ```
 
-### Building the Project
+### Building and Testing
 ```bash
-./gradlew clean build
-./gradlew build -x test    # Skip tests
-./gradlew build            # Full build with tests
+./gradlew clean build         # Full build with tests
+./gradlew build -x test       # Build without tests
+./gradlew compileJava         # Compile only (Java 8 compatibility check)
+./gradlew test                # Run all tests
 ```
 
-### Server Management
+### Database Access
 ```bash
-# Check if server is running
-lsof -i :8080
+# Connect to MariaDB
+mysql -h 192.168.0.109 -u root -p'~Asy10131227' jobtracker
 
-# View real-time logs
-tail -f application.log
-
-# Kill server process
-lsof -ti :8080 | xargs kill -9
+# Check database connectivity
+mysql -h 192.168.0.109 -u root -p'~Asy10131227' jobtracker -e "SELECT 1"
 ```
 
 ## Architecture Overview
 
 ### Core Technologies
 - **Framework**: Spring Boot 2.7.0
-- **Build Tool**: Gradle (migrated from Maven)
-- **Database**: MariaDB with MyBatis ORM
-- **Authentication**: JWT tokens
+- **Java Version**: Java 8 (CRITICAL - see compatibility rules below)
+- **Build Tool**: Gradle
+- **Database**: MariaDB 10.x with MyBatis ORM
+- **Authentication**: JWT tokens (24-hour expiration)
 - **API Documentation**: SpringDoc OpenAPI (Swagger UI at `/swagger-ui.html`)
-- **Java Version**: Java 8
+- **Ports**: 8080 (primary), 8081 (secondary via AdditionalPortConfig)
 
-### Package Structure
+### High-Level Architecture
+
 ```
-com.example.pm7/
-├── config/         # Security, JWT, Web, Cache configurations
-├── controller/     # REST API endpoints
-├── dto/           # Data transfer objects
-├── mapper/        # MyBatis mapper interfaces
-├── model/         # Domain entities
-├── service/       # Business logic layer
-├── aop/           # Aspect-oriented programming (logging)
-├── exception/     # Global exception handling
-└── interceptor/   # Request interceptors
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Next.js UI    │────▶│  Spring Boot    │────▶│    MariaDB      │
+│  (Port 3000)    │◀────│  (Port 8080)    │◀────│  (jobtracker)   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         │                       │                        │
+         │                       ├── Controllers         ├── users
+         │                       ├── Services            ├── freelancers
+         └── JWT Auth           ├── Mappers (MyBatis)  ├── categories
+                                └── DTOs                └── projects
 ```
 
-### Key Configuration Files
-- `src/main/resources/application.yml` - Main configuration
-- `src/main/resources/mapper/*.xml` - MyBatis SQL mappings
-- `build.gradle` - Project dependencies and build configuration
+### Package Structure and Responsibilities
 
-### Database Configuration
+- **controller/** - REST endpoints, request validation, response formatting
+- **service/** - Business logic, transaction management, data transformation
+- **mapper/** - MyBatis interfaces for database operations
+- **model/** - Domain entities matching database tables
+- **dto/** - Data transfer objects for API requests/responses
+- **config/** - Spring configuration (Security, JWT, Web, Ports)
+- **interceptor/** - Request interceptors for authentication
+- **exception/** - Global exception handling
+
+### Database Schema Overview
+
+The database follows a user-centric model where freelancers and companies are extensions of the users table:
+
+1. **users** - Core authentication and profile data
+2. **freelancers** - Extended profile for freelancer users (1:1 with users)
+3. **categories** - Hierarchical categorization system
+4. **projects** - Job postings and project listings
+5. **companies** - Company profiles (1:1 with users)
+
+### API Endpoint Structure
+
+- `/api/auth/*` - Authentication (login, logout, session)
+- `/api/freelancers/*` - Freelancer profiles and search
+- `/api/categories/*` - Category management
+- `/api/projects/*` - Project management (in development)
+- `/swagger-ui.html` - API documentation
+
+## Critical Java 8 Compatibility Rules
+
+### ❌ NEVER Use (Java 9+)
+```java
+List.of(), Set.of(), Map.of()     // Use Arrays.asList() or Collections
+stream.toList()                    // Use .collect(Collectors.toList())
+String.isBlank(), String.strip()   // Use StringUtils.isBlank() or .trim()
+```
+
+### ✅ ALWAYS Use (Java 8)
+```java
+Arrays.asList("item1", "item2")
+stream.collect(Collectors.toList())
+StringUtils.isBlank(str) or str.trim().isEmpty()
+```
+
+### Required Imports
+```java
+import java.util.stream.Collectors;  // For stream operations
+import java.util.Arrays;             // For Arrays.asList()
+import org.springframework.util.StringUtils;  // For string utilities
+```
+
+## Database Configuration and MCP Integration
+
+### Connection Details
 - **Host**: 192.168.0.109
 - **Port**: 3306
-- **Database**: jobtracker (was pms7 in earlier configs)
+- **Database**: jobtracker
 - **Username**: root
-- **Connection pool**: HikariCP with 20 max connections
-- **Important**: Check DB name in application.yml - may need to switch between `jobtracker` and `pms7`
+- **MCP Server**: MariaDB MCP server configured in mcp-settings.json
 
-### API Structure
-- `/api/auth/*` - Authentication endpoints (login, logout, refresh)
-- `/api/notices/*` - Notice management
-- `/api/events/*` - Event management
-- `/api/test/*` - Testing endpoints (development only)
+### Common Database Operations
 
-### Security Configuration
-- JWT-based authentication with 24-hour token expiration
-- CORS enabled for all origins (development configuration)
-- Login interceptor for protected endpoints
-- Security endpoints excluded: `/api/auth/**`, `/swagger-ui/**`, `/api-docs/**`
+```sql
+-- Check freelancer skills (JSON column)
+SELECT * FROM freelancers 
+WHERE JSON_SEARCH(skills, 'one', 'React') IS NOT NULL;
 
-### Development Notes
-- Application runs on port 8080 (configured in application.yml)
-- Comprehensive logging configured with DEBUG level for application code
-- File uploads supported (max 10MB) with path `/uploads/notice`
-- No test files currently exist in the project
-- Redis caching is configured but implementation may be pending
-- **Port Configuration**: Default port is 8080, but check application.yml as it may revert to 8080
-
-## Frontend Integration (Next.js)
-
-### Connected Next.js Project
-- **Location**: `/Users/doseunghyeon/developerApp/react/aiproject02`
-- **Framework**: Next.js 14 with TypeScript
-- **Port**: 3000
-- **Authentication**: JWT-based with localStorage persistence
-
-### API Endpoint Mapping
-Backend serves API endpoints that the Next.js frontend consumes:
-
-| Frontend Route | Backend Endpoint | Method | Description |
-|---------------|------------------|---------|-------------|
-| `/api/auth/login` | `/api/auth/login` | POST | User authentication |
-| `/api/auth/session` | `/api/auth/session-info` | GET | Session validation |
-| `/api/auth/logout` | `/api/auth/logout` | POST | User logout |
-
-### Authentication Flow Integration
-```json
-// Frontend Login Request (Next.js)
-{
-  "username": "user_id",  // Note: uses "username" not "username"
-  "password": "password"
-}
-
-// Backend Response (Spring Boot)
-{
-  "success": true,
-  "data": {
-    "name": "User Name",
-    "username": "username",
-    "username": "user_id",
-    "email": "user@example.com",
-    "role": "ROLE_USER",
-    "access_token": "jwt_token_here",
-    "status": "200"
-  }
-}
+-- Update user logout time
+UPDATE users SET last_login = CURRENT_TIMESTAMP 
+WHERE username = ?;
 ```
+
+## Frontend Integration
+
+### Next.js Frontend
+- **Location**: `/Users/doseunghyeon/developerApp/react/aiproject02`
+- **Port**: 3000
+- **Authentication**: JWT stored in localStorage as `auth_token`
 
 ### CORS Configuration
-Backend CORS settings for Next.js frontend:
-```java
-// WebConfig.java
-.allowedOrigins("http://localhost:3000")
-.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-.allowCredentials(true)
-```
+Backend allows requests from `http://localhost:3000` with credentials.
 
-### JWT Token Configuration
-- **Expiration**: 24 hours (matches frontend 30-day localStorage)
-- **Algorithm**: HS512
-- **Storage**: Frontend stores in localStorage as `auth_token`
-- **Validation**: Backend validates via Security filters
+## Development Patterns
 
-### Development Setup for Integration
-1. **Start Backend**: `./gradlew bootRun` (runs on port 8080)
-2. **Start Frontend**: `npm run dev` (runs on port 3000)
-3. **API Proxy**: Next.js proxies `/api/*` to `http://localhost:8080/api/*`
-
-### Required Environment Variables
-Frontend `.env` should include:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8080/api/
-NEXT_PUBLIC_USE_MOCK_API=false
-```
-
-### Troubleshooting Integration
-- **CORS Issues**: Ensure backend allows `http://localhost:3000` origin
-- **Authentication**: Frontend uses `username` field for login
-- **Port Conflicts**: Backend on 8080, Frontend on 3000
-- **JWT Mismatch**: Check token expiration and format compatibility
-
-### Shared Development Context
-Both projects share:
-- JWT-based authentication system
-- RESTful API architecture
-- Database integration (MariaDB)
-- Comprehensive logging and error handling
-- TypeScript/Java type safety principles
-
-## Critical Database Mapping Issues
-
-### User Table Column Mapping
-The project has inconsistencies between DB schema and MyBatis mappings:
-
-**Current DB Schema (users table)**:
-- `id` (not user_id)
-- `username` - Login ID
-- `password` - Plain password field (not password_hash)
-- `name` - User's full name (not full_name)
-- `email`
-- `role`
-- `created_at`
-- `updated_at`
-
-**Common Mapping Errors**:
-1. UserMapper.xml may reference `password_hash` but DB has `password`
-2. UserMapper.xml may reference `full_name` but DB has `name`
-3. UserMapper.xml may reference `user_id` but DB has `id`
-
-**Fix Required**: Always check UserMapper.xml matches actual DB schema
-
-### SQL Logging Configuration
-To see SQL parameters in logs:
-```yaml
-logging:
-  level:
-    org.apache.ibatis: TRACE
-    com.example.pm7.mapper: TRACE
-    com.zaxxer.hikari: WARN  # Disable connection pool logs
-```
-
-### Common Troubleshooting
-
-#### Login Failures
-1. Check DB connection (jobtracker vs pms7)
-2. Verify UserMapper.xml column names match DB
-3. Check password encoding (BCrypt vs plain text)
-4. Enable SQL parameter logging to debug
-
-#### Port Conflicts
-```bash
-# Port 8080 in use
-lsof -ti :8080 | xargs kill -9
-
-# Port 8080 in use  
-lsof -ti :8080 | xargs kill -9
-```
-
-#### Swagger UI Access
-- URL: http://localhost:8081/swagger-ui.html
-- Alternative: http://localhost:8081/swagger-ui/index.html
-- API Docs: http://localhost:8081/api-docs
-
-## Development Best Practices (from Cursor Rules)
-
-### Chain-of-Thought Development Pattern
-When implementing complex features:
-1. **THINK**: What business logic is needed?
-2. **PLAN**: Controller → Service → Mapper → DB structure
-3. **IMPLEMENT**: Follow existing patterns
-4. **VERIFY**: Test endpoints and check logs
-5. **OPTIMIZE**: Apply caching, validation, security
-
-### Code Patterns to Follow
-
-#### Service Layer Pattern
+### Service Implementation Pattern
 ```java
 @Service
 @RequiredArgsConstructor
-public class ServiceImpl implements Service {
-    private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
+public class FreelancerServiceImpl implements FreelancerService {
+    private final FreelancerMapper freelancerMapper;
     
     @Override
     @Transactional
-    public void create(Entity entity) {
-        // Validation
-        validateEntity(entity);
-        // Business logic
-        processEntity(entity);
-        // Persistence
-        mapper.insert(entity);
+    public List<FreelancerDto> searchBySkills(List<String> skills) {
+        // Java 8 compatible implementation
+        List<Freelancer> freelancers = freelancerMapper.findBySkills(skills);
+        return freelancers.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());  // NOT .toList()!
     }
 }
 ```
 
-#### REST Controller Pattern
-```java
-@RestController
-@RequestMapping("/api/resource")
-@RequiredArgsConstructor
-public class ResourceController {
-    private final ResourceService service;
-    
-    @PostMapping
-    public ResponseEntity<ApiResponse<Resource>> create(
-            @Valid @RequestBody ResourceRequest request) {
-        Resource resource = service.create(request);
-        return ResponseEntity.ok(ApiResponse.success(resource));
-    }
-}
-```
-
-#### MyBatis Mapper Pattern
+### MyBatis Mapper Pattern
 ```xml
-<select id="findByCondition" resultType="Entity">
-    SELECT * FROM entities
-    <where>
-        <if test="name != null and name != ''">
-            AND name LIKE CONCAT('%', #{name}, '%')
-        </if>
-        <if test="status != null">
-            AND status = #{status}
-        </if>
-    </where>
-    ORDER BY created_at DESC
+<select id="findBySkills" resultMap="freelancerResultMap">
+    SELECT * FROM freelancers f
+    WHERE 
+    <foreach collection="skills" item="skill" separator=" OR ">
+        JSON_SEARCH(f.skills, 'one', #{skill}) IS NOT NULL
+    </foreach>
 </select>
 ```
 
-### Security Considerations
-- Always validate input with `@Valid`
-- Use parameterized queries to prevent SQL injection
-- Apply proper authentication/authorization
-- Never log sensitive data (passwords, tokens)
-- Use BCrypt for password hashing
+## Recent Architectural Decisions
 
-### Testing Strategy
+1. **JSON Skills Storage**: Skills stored as JSON arrays in MariaDB for flexibility
+2. **Dual Port Support**: Application accessible on both 8080 and 8081
+3. **Token Blacklisting**: In-memory JWT blacklist for secure logout
+4. **Advanced Search**: Complex filtering using MyBatis dynamic SQL
+
+## Common Troubleshooting
+
+### Port Already in Use
 ```bash
-# Run specific test class
-./gradlew test --tests com.example.pm7.controller.UserControllerTest
-
-# Run all tests with coverage
-./gradlew test jacocoTestReport
-```
-
-## Project-Specific Notes
-
-### Recent Changes
-- Migrated from Maven to Gradle (mvnw files still present)
-- Removed unnecessary shell scripts and configuration files
-- Updated security configuration for Swagger access
-- Fixed CORS issues for frontend integration
-
-### Known Issues
-1. **DB Name Inconsistency**: Check if using `jobtracker` or `pms7`
-2. **Port Configuration**: May revert from 8081 to 8080 in application.yml
-3. **UserMapper Column Names**: Must match actual DB schema
-4. **Password Field**: DB uses `password` not `password_hash`
-
-### Quick Fixes
-```bash
-# Fix port already in use
 lsof -ti :8080 :8081 | xargs kill -9
-
-# Clean build after changes
-./gradlew clean build
-
-# Check DB connectivity
-mysql -h 192.168.0.109 -u root -p'~Asy10131227' jobtracker -e "SELECT 1"
 ```
+
+### Database Connection Issues
+- Verify database name is `jobtracker` (not `pms7`)
+- Check MyBatis mapper column names match actual DB schema
+- Enable SQL logging for debugging:
+  ```yaml
+  logging.level.com.example.pm7.mapper: TRACE
+  ```
+
+### Java Compilation Errors
+```bash
+# Check for Java 9+ APIs
+grep -r "List\.of\|\.toList()\|\.isBlank()" src/
+
+# Verify compilation
+./gradlew compileJava
+```
+
+## Project-Specific Keywords and Paths
+
+When working with **서버, 자바, SQL, 쿼리, DTO, DAO, Lombok, MCP**:
+- Work in: `/Users/doseunghyeon/developerApp/JAVA/project_ai01`
+
+When working with **DDL, DML, DCL, database**:
+- Reference: `/Users/doseunghyeon/developerApp/JAVA/project_ai01/database`
+- Database name: `jobtracker`
+
+*Last Updated: 2025-01-03*
+*Version: 3.1 - Enhanced with database schema alignment*

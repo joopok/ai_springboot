@@ -10,6 +10,8 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.example.pm7.config.JwtTokenUtil;
+import java.util.Date;
 
 @Service
 @Slf4j
@@ -19,6 +21,12 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+    
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     @Override
     public User findByUsername(String username) {
@@ -71,6 +79,7 @@ public class UserServiceImpl implements UserService {
         log.info("=== 비밀번호 검증 시작 ===");
         log.info("입력된 비밀번호: {}", password);
         log.info("DB 저장 비밀번호: {}", user.getPassword());
+        log.info("사용자 정보 - ID: {}, Username: {}, Name: {}", user.getId(), user.getUsername(), user.getFullName());
 
         // 비밀번호 검증이 안되는 이유:
         // 1. 저장된 비밀번호가 BCrypt로 인코딩되지 않았을 수 있음
@@ -79,10 +88,16 @@ public class UserServiceImpl implements UserService {
 
         boolean isMatch = false;
         try {
+            // 디버그를 위한 추가 로깅
+            log.info("PasswordEncoder 클래스: {}", passwordEncoder.getClass().getName());
+            log.info("입력 비밀번호 길이: {}", password.length());
+            log.info("DB 비밀번호 해시 길이: {}", user.getPassword().length());
+            log.info("DB 비밀번호 해시 시작: {}", user.getPassword().substring(0, 10));
+            
             isMatch = passwordEncoder.matches(password, user.getPassword());
             log.info("비밀번호 검증 시도 결과: {}", isMatch);
         } catch (Exception e) {
-            log.error("비밀번호 검증 중 오류 발생: {}", e.getMessage());
+            log.error("비밀번호 검증 중 오류 발생: {}", e.getMessage(), e);
         }
 
         if (isMatch) {
@@ -96,10 +111,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void logout(String username) {
-        // 로그아웃 시간을 별도로 추적하지 않는 현재 DB 구조에 맞춰서
-        // 단순히 로그만 남기고 종료
-        log.info("사용자 로그아웃: {}", username);
-        // TODO: 필요시 last_logout 컬럼을 DB에 추가하고 해당 시간을 업데이트할 수 있음
+    public void logout(String username, String jwtToken) {
+        log.info("사용자 로그아웃 처리 시작: {}", username);
+        
+        // JWT 토큰이 있으면 블랙리스트에 추가
+        if (jwtToken != null && !jwtToken.isEmpty()) {
+            try {
+                // 토큰의 만료 시간 계산
+                Date expiration = jwtTokenUtil.getExpirationDateFromToken(jwtToken);
+                long expirationTime = (expiration.getTime() - System.currentTimeMillis()) / 1000;
+                
+                if (expirationTime > 0) {
+                    // 토큰을 블랙리스트에 추가
+                    tokenBlacklistService.addToBlacklist(jwtToken, expirationTime);
+                    log.info("JWT 토큰이 블랙리스트에 추가되었습니다.");
+                }
+            } catch (Exception e) {
+                log.error("JWT 토큰 블랙리스트 추가 중 오류 발생", e);
+            }
+        }
+        
+        // 사용자의 마지막 활동 시간 업데이트 (updated_at) - DB 서버 시간 사용
+        try {
+            userMapper.updateLogoutTime(username);
+            log.info("사용자 로그아웃 완료: {}", username);
+        } catch (Exception e) {
+            log.error("사용자 로그아웃 시간 업데이트 중 오류 발생", e);
+        }
     }
 }

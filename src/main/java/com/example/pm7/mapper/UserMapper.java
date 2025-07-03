@@ -22,6 +22,9 @@ public interface UserMapper {
     // 마지막 로그인 시간 업데이트
     void updateLastLogin(@Param("userId") Long userId);
     
+    // 로그아웃 시간 업데이트 (updated_at 필드 사용)
+    void updateLogoutTime(@Param("username") String username);
+    
     // 사용자 정보 업데이트
     void update(User user);
     

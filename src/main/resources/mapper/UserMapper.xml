@@ -10,7 +10,7 @@
             username,
             email,
             password_hash as password,
-            full_name as fullName,
+            name as fullName,
             role,
             status,
             created_at as createdAt,
@@ -26,7 +26,7 @@
             username,
             email,
             password_hash as password,
-            full_name as fullName,
+            name as fullName,
             role,
             created_at as createdAt,
             updated_at as updatedAt
@@ -41,7 +41,7 @@
             username,
             email,
             password_hash as password,
-            full_name as fullName,
+            name as fullName,
             role,
             status,
             created_at as createdAt,
@@ -56,7 +56,7 @@
             username, 
             email, 
             password_hash, 
-            full_name, 
+            name, 
             role, 
             status,
             created_at, 
@@ -67,18 +67,27 @@
             #{email}, 
             #{password}, 
             #{fullName}, 
-            COALESCE(#{role}, 'USER'),
-            COALESCE(#{status}, 'ACTIVE'),
+            COALESCE(#{role}, 'freelancer'),
+            COALESCE(#{status}, 'active'),
             NOW(), 
             NOW()
         )
     </insert>
 
-    <!-- 마지막 로그인 시간 업데이트 (현재 DB 구조에 맞춤) -->
+    <!-- 마지막 로그인 시간 업데이트 -->
     <update id="updateLastLogin" parameterType="long">
         UPDATE users 
-        SET updated_at = NOW()
+        SET last_login = NOW(),
+            updated_at = NOW()
         WHERE id = #{userId}
+    </update>
+    
+    <!-- 로그아웃 시간 업데이트 -->
+    <update id="updateLogoutTime" parameterType="string">
+        UPDATE users 
+        SET last_login = NOW(),
+            updated_at = NOW()
+        WHERE username = #{username}
     </update>
 
     <!-- 사용자 정보 업데이트 -->
@@ -88,7 +97,7 @@
             <if test="username != null">username = #{username},</if>
             <if test="email != null">email = #{email},</if>
             <if test="password != null">password_hash = #{password},</if>
-            <if test="fullName != null">full_name = #{fullName},</if>
+            <if test="fullName != null">name = #{fullName},</if>
             <if test="role != null">role = #{role},</if>
             updated_at = NOW()
         </set>
@@ -101,7 +110,7 @@
             id,
             username,
             email,
-            full_name as fullName,
+            name as fullName,
             role,
             status,
             created_at as createdAt,

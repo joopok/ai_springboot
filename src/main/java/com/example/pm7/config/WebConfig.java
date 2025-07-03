@@ -11,11 +11,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedOrigins("http://localhost:3000") // Next.js 앱의 주소
+                .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000") // Next.js 앱의 주소
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
-                .maxAge(4600);
+                .maxAge(3600);
     }
 }
