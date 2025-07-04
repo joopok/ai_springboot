@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PM7 is a Spring Boot 2.7.0 freelancer marketplace platform connecting freelancers with projects. It uses MyBatis for database operations with MariaDB, JWT authentication, and provides RESTful APIs for managing freelancers, categories, projects, and user authentication.
+Job Platform is a Spring Boot 2.7.0 freelancer marketplace platform connecting freelancers with projects. It uses MyBatis for database operations with MariaDB, JWT authentication, and provides RESTful APIs for managing freelancers, categories, projects, and user authentication.
 
 ## Essential Commands
 
@@ -196,7 +196,7 @@ lsof -ti :8080 :8081 | xargs kill -9
 - Check MyBatis mapper column names match actual DB schema
 - Enable SQL logging for debugging:
   ```yaml
-  logging.level.com.example.pm7.mapper: TRACE
+  logging.level.com.fid.job.mapper: TRACE
   ```
 
 ### Java Compilation Errors

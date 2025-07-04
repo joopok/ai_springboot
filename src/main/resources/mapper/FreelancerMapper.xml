@@ -2,10 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.pm7.mapper.FreelancerMapper">
+<mapper namespace="com.fid.job.mapper.FreelancerMapper">
 
     <!-- Freelancer ResultMap -->
-    <resultMap id="FreelancerResultMap" type="com.example.pm7.model.Freelancer">
+    <resultMap id="FreelancerResultMap" type="com.fid.job.model.Freelancer">
         <id property="id" column="id"/>
         <result property="userId" column="user_id"/>
         <result property="userName" column="user_name"/>
@@ -256,7 +256,7 @@
     </select>
 
     <!-- 프리랜서 정보 등록 -->
-    <insert id="insert" parameterType="com.example.pm7.model.Freelancer" 
+    <insert id="insert" parameterType="com.fid.job.model.Freelancer" 
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO freelancers (
             user_id, title, description, skills, experience_years, experience_level,
@@ -274,7 +274,7 @@
     </insert>
 
     <!-- 프리랜서 정보 생성 (기존 호환성) -->
-    <insert id="insertFreelancer" parameterType="com.example.pm7.model.Freelancer" 
+    <insert id="insertFreelancer" parameterType="com.fid.job.model.Freelancer" 
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO freelancers (
             user_id, title, description, skills, experience_years, experience_level,
@@ -292,7 +292,7 @@
     </insert>
 
     <!-- 프리랜서 정보 수정 -->
-    <update id="update" parameterType="com.example.pm7.model.Freelancer">
+    <update id="update" parameterType="com.fid.job.model.Freelancer">
         UPDATE freelancers 
         SET 
             title = #{title},
@@ -312,7 +312,7 @@
     </update>
 
     <!-- 프리랜서 정보 수정 (기존 호환성) -->
-    <update id="updateFreelancer" parameterType="com.example.pm7.model.Freelancer">
+    <update id="updateFreelancer" parameterType="com.fid.job.model.Freelancer">
         UPDATE freelancers 
         SET 
             title = #{title},

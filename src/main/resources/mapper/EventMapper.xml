@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.pm7.mapper.EventMapper">
+<mapper namespace="com.fid.job.mapper.EventMapper">
     
-    <insert id="insert" parameterType="com.example.pm7.model.Event">
+    <insert id="insert" parameterType="com.fid.job.model.Event">
         INSERT INTO events (title, description, start_date, end_date)
         VALUES (#{title}, #{description}, #{startDate}, #{endDate})
     </insert>
     
-    <select id="findAll" resultType="com.example.pm7.model.Event">
+    <select id="findAll" resultType="com.fid.job.model.Event">
         SELECT * FROM events ORDER BY start_date DESC
     </select>
     
-    <select id="findById" parameterType="long" resultType="com.example.pm7.model.Event">
+    <select id="findById" parameterType="long" resultType="com.fid.job.model.Event">
         SELECT * FROM events WHERE event_id = #{id}
     </select>
     
-    <select id="findByStatus" parameterType="string" resultType="com.example.pm7.model.Event">
+    <select id="findByStatus" parameterType="string" resultType="com.fid.job.model.Event">
         SELECT * FROM events WHERE status = #{status} ORDER BY start_date DESC
     </select>
     
-    <update id="update" parameterType="com.example.pm7.model.Event">
+    <update id="update" parameterType="com.fid.job.model.Event">
         UPDATE events 
         SET title = #{title},
             description = #{description},

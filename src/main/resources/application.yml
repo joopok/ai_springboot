@@ -45,7 +45,7 @@ spring:
 # MyBatis Configuration - PM7 프로젝트용
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.example.pm7.model
+  type-aliases-package: com.fid.job.model
   configuration:
     map-underscore-to-camel-case: true
     default-fetch-size: 100
@@ -98,7 +98,7 @@ cors:
 # Logging Configuration - PM7 프로젝트용
 logging:
   level:
-    com.example.pm7: DEBUG
+    com.fid.job: DEBUG
     org.springframework.security: INFO
     org.springframework.web: INFO
     org.mybatis: DEBUG

@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.pm7.mapper.CategoryMapper">
+<mapper namespace="com.fid.job.mapper.CategoryMapper">
     
-    <resultMap id="categoryResult" type="com.example.pm7.dto.CategoryDTO">
+    <resultMap id="categoryResult" type="com.fid.job.dto.CategoryDTO">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
         <result property="slug" column="slug"/>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.pm7.mapper.NoticeMapper">
+<mapper namespace="com.fid.job.mapper.NoticeMapper">
 
     <!-- 결과 매핑 정의 -->
-    <resultMap id="NoticeWithAttachments" type="com.example.pm7.model.Notice">
+    <resultMap id="NoticeWithAttachments" type="com.fid.job.model.Notice">
         <result property="id" column="noticeId"/>
         <result property="title" column="title"/>
         <result property="content" column="content"/>
@@ -14,7 +14,7 @@
         <result property="updatedAt" column="updated_at"/>
         <result property="isTop" column="is_top"/>
         <result property="loginRequired" column="login_required"/>
-        <collection property="attachments" ofType="com.example.pm7.model.NoticeAttachment">
+        <collection property="attachments" ofType="com.fid.job.model.NoticeAttachment">
             <result property="id" column="attachment_id"/>
             <result property="noticeId" column="notice_id"/>
             <result property="fileName" column="file_name"/>
@@ -63,7 +63,7 @@
     </select>
 
     <!-- 공지사항 등록 -->
-    <insert id="insert" parameterType="com.example.pm7.model.Notice" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.fid.job.model.Notice" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO notices (
             title, content, read_count, author, is_top, 
             login_required, created_at, updated_at
@@ -74,7 +74,7 @@
     </insert>
 
     <!-- 첨부파일 등록 -->
-    <insert id="insertAttachment" parameterType="com.example.pm7.model.NoticeAttachment">
+    <insert id="insertAttachment" parameterType="com.fid.job.model.NoticeAttachment">
         INSERT INTO notice_attachments (
             notice_id, file_name, file_path, uploaded_at
         ) VALUES (
@@ -83,7 +83,7 @@
     </insert>
 
     <!-- 공지사항 수정 -->
-    <update id="update" parameterType="com.example.pm7.model.Notice">
+    <update id="update" parameterType="com.fid.job.model.Notice">
         UPDATE notices
         SET title = #{title},
             content = #{content},
