@@ -54,4 +54,22 @@ public interface ProjectMapper {
     
     // 긴급 프로젝트 조회
     List<Project> findUrgentProjects(@Param("limit") int limit);
+    
+    // 프로젝트 질문 목록 조회
+    List<Map<String, Object>> findProjectQuestions(@Param("params") Map<String, Object> params);
+    
+    // 프로젝트 질문 수 조회
+    int countProjectQuestions(@Param("params") Map<String, Object> params);
+    
+    // 프로젝트 질문 등록
+    void insertProjectQuestion(@Param("params") Map<String, Object> params);
+    
+    // 프로젝트 후기 목록 조회
+    List<Map<String, Object>> findProjectReviews(@Param("params") Map<String, Object> params);
+    
+    // 프로젝트 후기 수 조회
+    int countProjectReviews(@Param("params") Map<String, Object> params);
+    
+    // 프로젝트 후기 등록
+    void insertProjectReview(@Param("params") Map<String, Object> params);
 }

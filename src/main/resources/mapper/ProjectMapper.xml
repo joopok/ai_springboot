@@ -43,6 +43,30 @@
         <result property="isBookmarked" column="is_bookmarked"/>
         <result property="hasApplied" column="has_applied"/>
         <result property="bookmarkCount" column="bookmark_count"/>
+        <!-- 원격/상주 프로젝트 관련 필드 -->
+        <result property="remoteTools" column="remote_tools"/>
+        <result property="communicationMethods" column="communication_methods"/>
+        <result property="teamSize" column="team_size"/>
+        <result property="developmentMethodology" column="development_methodology"/>
+        <result property="codeReviewProcess" column="code_review_process"/>
+        <result property="workingHours" column="working_hours"/>
+        <result property="flexibleHours" column="flexible_hours"/>
+        <result property="timezone" column="timezone"/>
+        <result property="onsiteRequirements" column="onsite_requirements"/>
+        <result property="onsiteFrequency" column="onsite_frequency"/>
+        <result property="officeLocation" column="office_location"/>
+        <result property="parkingAvailable" column="parking_available"/>
+        <result property="mealProvided" column="meal_provided"/>
+        <result property="equipmentProvided" column="equipment_provided"/>
+        <result property="benefits" column="benefits"/>
+        <result property="preferredWorkingHours" column="preferred_working_hours"/>
+        <result property="deliverables" column="deliverables"/>
+        <result property="projectStages" column="project_stages"/>
+        <result property="urgency" column="urgency"/>
+        <result property="negotiable" column="negotiable"/>
+        <result property="viewCount" column="views"/>
+        <result property="budget" column="budget"/>
+        <result property="requirements" column="requirements"/>
     </resultMap>
 
     <!-- 기본 컬럼 (최적화된 선택적 조인) -->
@@ -74,7 +98,29 @@
         p.is_featured,
         p.is_urgent,
         p.created_at,
-        p.updated_at
+        p.updated_at,
+        p.remote_tools,
+        p.communication_methods,
+        p.team_size,
+        p.development_methodology,
+        p.code_review_process,
+        p.working_hours,
+        p.flexible_hours,
+        p.timezone,
+        p.onsite_requirements,
+        p.onsite_frequency,
+        p.office_location,
+        p.parking_available,
+        p.meal_provided,
+        p.equipment_provided,
+        p.benefits,
+        p.preferred_working_hours,
+        p.deliverables,
+        p.project_stages,
+        p.urgency,
+        p.negotiable,
+        CONCAT(p.budget_min, '~', p.budget_max) as budget,
+        p.requirements
     </sql>
 
     <!-- 조인 컬럼 (필요시만 조인) -->
@@ -188,6 +234,36 @@
             <if test="params.deadlineWithin != null">
                 AND p.deadline >= CURDATE() 
                 AND p.deadline &lt;= DATE_ADD(CURDATE(), INTERVAL #{params.deadlineWithin} DAY)
+            </if>
+            
+            <!-- 상주 프로젝트 관련 필터 -->
+            <!-- 팀 규모 -->
+            <if test="params.teamSize != null and params.teamSize != ''">
+                AND p.team_size = #{params.teamSize}
+            </if>
+            
+            <!-- 상주 빈도 -->
+            <if test="params.onsiteFrequency != null and params.onsiteFrequency != ''">
+                AND p.onsite_frequency = #{params.onsiteFrequency}
+            </if>
+            
+            <!-- 유연근무제 -->
+            <if test="params.flexibleHours != null">
+                AND p.flexible_hours = #{params.flexibleHours}
+            </if>
+            
+            <!-- 긴급도 -->
+            <if test="params.urgency != null and params.urgency != ''">
+                AND p.urgency = #{params.urgency}
+            </if>
+            
+            <!-- 원격 도구 -->
+            <if test="params.remoteTools != null and params.remoteTools.size() > 0">
+                AND (
+                    <foreach collection="params.remoteTools" item="tool" separator=" OR ">
+                        JSON_SEARCH(p.remote_tools, 'one', #{tool}) IS NOT NULL
+                    </foreach>
+                )
             </if>
         </if>
     </sql>
@@ -402,5 +478,74 @@
             LIMIT #{params.limit} OFFSET #{params.offset}
         </if>
     </select>
+
+    <!-- 프로젝트 질문 목록 조회 -->
+    <select id="findProjectQuestions" parameterType="map" resultType="map">
+        SELECT 
+            q.id,
+            q.project_id AS projectId,
+            q.user_id AS userId,
+            q.content,
+            q.answer,
+            q.answered_by AS answeredBy,
+            q.answered_at AS answeredAt,
+            q.created_at AS createdAt,
+            u.name AS authorName,
+            u.profile_image AS authorProfileImage,
+            au.name AS answererName
+        FROM project_questions q
+        LEFT JOIN users u ON q.user_id = u.id
+        LEFT JOIN users au ON q.answered_by = au.id
+        WHERE q.project_id = #{params.projectId}
+        ORDER BY q.created_at DESC
+        LIMIT #{params.limit} OFFSET #{params.offset}
+    </select>
+    
+    <!-- 프로젝트 질문 수 조회 -->
+    <select id="countProjectQuestions" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM project_questions
+        WHERE project_id = #{params.projectId}
+    </select>
+    
+    <!-- 프로젝트 질문 등록 -->
+    <insert id="insertProjectQuestion" parameterType="map">
+        INSERT INTO project_questions (project_id, user_id, content)
+        VALUES (#{params.projectId}, #{params.userId}, #{params.content})
+    </insert>
+    
+    <!-- 프로젝트 후기 목록 조회 -->
+    <select id="findProjectReviews" parameterType="map" resultType="map">
+        SELECT 
+            r.id,
+            r.project_id AS projectId,
+            r.user_id AS userId,
+            r.rating,
+            r.content,
+            r.project_duration AS projectDuration,
+            r.project_budget AS projectBudget,
+            r.created_at AS createdAt,
+            u.name AS authorName,
+            u.profile_image AS authorProfileImage,
+            u.name AS freelancerName
+        FROM project_reviews r
+        LEFT JOIN users u ON r.user_id = u.id
+        WHERE r.project_id = #{params.projectId}
+        ORDER BY r.created_at DESC
+        LIMIT #{params.limit} OFFSET #{params.offset}
+    </select>
+    
+    <!-- 프로젝트 후기 수 조회 -->
+    <select id="countProjectReviews" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM project_reviews
+        WHERE project_id = #{params.projectId}
+    </select>
+    
+    <!-- 프로젝트 후기 등록 -->
+    <insert id="insertProjectReview" parameterType="map">
+        INSERT INTO project_reviews (project_id, user_id, rating, content)
+        VALUES (#{params.projectId}, #{params.userId}, #{params.rating}, #{params.content})
+    </insert>
 
 </mapper>

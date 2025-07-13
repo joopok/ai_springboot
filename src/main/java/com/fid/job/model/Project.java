@@ -46,4 +46,31 @@ public class Project {
     private Boolean isBookmarked;
     private Boolean hasApplied;
     private Integer bookmarkCount;
+    
+    // 원격/상주 프로젝트 관련 필드
+    private String remoteTools; // JSON
+    private String communicationMethods; // JSON
+    private String teamSize;
+    private String developmentMethodology;
+    private String codeReviewProcess;
+    private String workingHours;
+    private Boolean flexibleHours;
+    private String timezone;
+    private String onsiteRequirements;
+    private String onsiteFrequency;
+    private String officeLocation;
+    private Boolean parkingAvailable;
+    private Boolean mealProvided;
+    private Boolean equipmentProvided;
+    private String benefits; // JSON
+    private String preferredWorkingHours;
+    private String deliverables; // JSON
+    private String projectStages; // JSON
+    private String urgency;
+    private Boolean negotiable;
+    private Integer viewCount;
+    
+    // budget 관련
+    private String budget;
+    private String requirements; // JSON
 }

@@ -81,6 +81,11 @@ public class UserServiceImpl implements UserService {
         log.info("DB 저장 비밀번호: {}", user.getPassword());
         log.info("사용자 정보 - ID: {}, Username: {}, Name: {}", user.getId(), user.getUsername(), user.getFullName());
 
+        // 입력된 비밀번호를 BCrypt로 암호화해서 로그 출력
+        String encodedInputPassword = passwordEncoder.encode(password);
+        log.info("입력된 비밀번호의 BCrypt 암호화 결과: {}", encodedInputPassword);
+        log.info("입력 비밀번호 암호화 후 검증: {}", passwordEncoder.matches(password, encodedInputPassword));
+        
         // 비밀번호 검증이 안되는 이유:
         // 1. 저장된 비밀번호가 BCrypt로 인코딩되지 않았을 수 있음
         // 2. 입력된 비밀번호와 저장된 비밀번호 형식이 다를 수 있음
@@ -96,6 +101,22 @@ public class UserServiceImpl implements UserService {
             
             isMatch = passwordEncoder.matches(password, user.getPassword());
             log.info("비밀번호 검증 시도 결과: {}", isMatch);
+            
+            // 추가 검증 테스트
+            log.info("=== 추가 검증 테스트 ===");
+            log.info("테스트: '1234'와 DB 해시 매칭 = {}", passwordEncoder.matches("1234", user.getPassword()));
+            log.info("테스트: 'password123'과 DB 해시 매칭 = {}", passwordEncoder.matches("password123", user.getPassword()));
+            log.info("테스트: 'admin123'과 DB 해시 매칭 = {}", passwordEncoder.matches("admin123", user.getPassword()));
+            log.info("테스트: 'admin'과 DB 해시 매칭 = {}", passwordEncoder.matches("admin", user.getPassword()));
+            log.info("테스트: 'test'와 DB 해시 매칭 = {}", passwordEncoder.matches("test", user.getPassword()));
+            log.info("테스트: 'password'와 DB 해시 매칭 = {}", passwordEncoder.matches("password", user.getPassword()));
+            
+            // DB 해시가 올바른 BCrypt 형식인지 확인
+            if (user.getPassword().startsWith("$2a$") || user.getPassword().startsWith("$2b$")) {
+                log.info("DB 해시는 올바른 BCrypt 형식입니다.");
+            } else {
+                log.error("DB 해시가 BCrypt 형식이 아닙니다!");
+            }
         } catch (Exception e) {
             log.error("비밀번호 검증 중 오류 발생: {}", e.getMessage(), e);
         }

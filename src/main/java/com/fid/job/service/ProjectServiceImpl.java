@@ -1,5 +1,6 @@
 package com.fid.job.service;
 
+import com.fid.job.dto.RemoteProjectDTO;
 import com.fid.job.mapper.ProjectMapper;
 import com.fid.job.model.Project;
 import lombok.RequiredArgsConstructor;
@@ -243,5 +244,191 @@ public class ProjectServiceImpl implements ProjectService {
         // 실제 도메인으로 변경 필요
         String baseUrl = "http://localhost:3000";
         return baseUrl + "/project/" + projectId;
+    }
+    
+    @Override
+    @Transactional
+    public RemoteProjectDTO getRemoteProjectById(Long id, Long userId) {
+        log.info("상주 프로젝트 상세 조회 - ID: {}, User ID: {}", id, userId);
+        
+        // 프로젝트 조회 (userId 전달)
+        Project project = projectMapper.findById(id, userId);
+        if (project == null) {
+            log.warn("상주 프로젝트를 찾을 수 없음 - ID: {}", id);
+            return null;
+        }
+        
+        // Project를 RemoteProjectDTO로 변환
+        RemoteProjectDTO remoteProject = RemoteProjectDTO.fromProject(project);
+        
+        // 클라이언트 정보 보강 (필요시)
+        if (remoteProject.getClient() != null) {
+            // 실제 클라이언트 정보 조회 로직 추가 가능
+            remoteProject.getClient().setRating(4.5);
+            remoteProject.getClient().setReviewCount(12);
+            remoteProject.getClient().setProjectsCompleted(8);
+            remoteProject.getClient().setVerificationStatus("verified");
+        }
+        
+        return remoteProject;
+    }
+    
+    @Override
+    public Map<String, Object> getRemoteProjects(Map<String, Object> params) {
+        log.info("상주 프로젝트 목록 조회 - 파라미터: {}", params);
+        
+        // workType이 지정되지 않은 경우 onsite로 필터링
+        if (params.get("workType") == null) {
+            params.put("workType", "onsite");
+        }
+        
+        // 일반 프로젝트 목록 조회 로직 재사용
+        Map<String, Object> result = getAllProjects(params);
+        
+        // RemoteProjectDTO로 변환
+        List<Project> projects = (List<Project>) result.get("projects");
+        List<RemoteProjectDTO> remoteProjects = projects.stream()
+                .map(RemoteProjectDTO::fromProject)
+                .collect(java.util.stream.Collectors.toList());
+        
+        result.put("projects", remoteProjects);
+        
+        return result;
+    }
+    
+    @Override
+    @Transactional
+    public void incrementViewCount(Long projectId) {
+        log.info("프로젝트 조회수 증가 - ID: {}", projectId);
+        projectMapper.incrementViewCount(projectId);
+    }
+    
+    @Override
+    public Map<String, Object> getProjectQuestions(Map<String, Object> params) {
+        log.info("프로젝트 질문 목록 조회 - 파라미터: {}", params);
+        
+        // 페이징 처리
+        int page = 1;
+        int limit = 20;
+        
+        Object pageParam = params.get("page");
+        if (pageParam != null) {
+            if (pageParam instanceof Integer) {
+                page = Math.max(1, (Integer) pageParam);
+            } else if (pageParam instanceof String) {
+                try {
+                    page = Math.max(1, Integer.parseInt((String) pageParam));
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+            }
+        }
+        
+        Object limitParam = params.get("limit");
+        if (limitParam != null) {
+            if (limitParam instanceof Integer) {
+                limit = Math.min(100, Math.max(1, (Integer) limitParam));
+            } else if (limitParam instanceof String) {
+                try {
+                    limit = Math.min(100, Math.max(1, Integer.parseInt((String) limitParam)));
+                } catch (NumberFormatException e) {
+                    limit = 20;
+                }
+            }
+        }
+        
+        int offset = (page - 1) * limit;
+        
+        params.put("offset", offset);
+        params.put("limit", limit);
+        
+        List<Map<String, Object>> questions = projectMapper.findProjectQuestions(params);
+        int totalCount = projectMapper.countProjectQuestions(params);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", questions);
+        result.put("totalCount", totalCount);
+        result.put("currentPage", page);
+        result.put("limit", limit);
+        
+        return result;
+    }
+    
+    @Override
+    @Transactional
+    public void createProjectQuestion(Long projectId, Long userId, String content) {
+        log.info("프로젝트 질문 등록 - Project ID: {}, User ID: {}", projectId, userId);
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put("projectId", projectId);
+        params.put("userId", userId);
+        params.put("content", content);
+        
+        projectMapper.insertProjectQuestion(params);
+    }
+    
+    @Override
+    public Map<String, Object> getProjectReviews(Map<String, Object> params) {
+        log.info("프로젝트 후기 목록 조회 - 파라미터: {}", params);
+        
+        // 페이징 처리
+        int page = 1;
+        int limit = 20;
+        
+        Object pageParam = params.get("page");
+        if (pageParam != null) {
+            if (pageParam instanceof Integer) {
+                page = Math.max(1, (Integer) pageParam);
+            } else if (pageParam instanceof String) {
+                try {
+                    page = Math.max(1, Integer.parseInt((String) pageParam));
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+            }
+        }
+        
+        Object limitParam = params.get("limit");
+        if (limitParam != null) {
+            if (limitParam instanceof Integer) {
+                limit = Math.min(100, Math.max(1, (Integer) limitParam));
+            } else if (limitParam instanceof String) {
+                try {
+                    limit = Math.min(100, Math.max(1, Integer.parseInt((String) limitParam)));
+                } catch (NumberFormatException e) {
+                    limit = 20;
+                }
+            }
+        }
+        
+        int offset = (page - 1) * limit;
+        
+        params.put("offset", offset);
+        params.put("limit", limit);
+        
+        List<Map<String, Object>> reviews = projectMapper.findProjectReviews(params);
+        int totalCount = projectMapper.countProjectReviews(params);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", reviews);
+        result.put("totalCount", totalCount);
+        result.put("currentPage", page);
+        result.put("limit", limit);
+        
+        return result;
+    }
+    
+    @Override
+    @Transactional
+    public void createProjectReview(Long projectId, Long userId, String content, Integer rating) {
+        log.info("프로젝트 후기 등록 - Project ID: {}, User ID: {}, Rating: {}", projectId, userId, rating);
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put("projectId", projectId);
+        params.put("userId", userId);
+        params.put("content", content);
+        params.put("rating", rating);
+        
+        projectMapper.insertProjectReview(params);
     }
 }
