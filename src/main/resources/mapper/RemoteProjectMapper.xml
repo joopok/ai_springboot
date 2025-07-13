@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fid.job.mapper.RemoteProjectMapper">
+
+    <resultMap id="projectResultMap" type="com.fid.job.model.Project">
+        <id property="id" column="id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="clientId" column="client_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="category" column="category"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="projectType" column="project_type"/>
+        <result property="budgetType" column="budget_type"/>
+        <result property="workType" column="work_type"/>
+        <result property="location" column="location"/>
+        <result property="budgetMin" column="budget_min"/>
+        <result property="budgetMax" column="budget_max"/>
+        <result property="duration" column="duration"/>
+        <result property="startDate" column="start_date"/>
+        <result property="deadline" column="deadline"/>
+        <result property="requiredSkills" column="required_skills"/>
+        <result property="preferredSkills" column="preferred_skills"/>
+        <result property="experienceYears" column="experience_years"/>
+        <result property="experienceLevel" column="experience_level"/>
+        <result property="status" column="status"/>
+        <result property="views" column="views"/>
+        <result property="applications" column="applications"/>
+        <result property="applicationsCount" column="applications_count"/>
+        <result property="isFeatured" column="is_featured"/>
+        <result property="isUrgent" column="is_urgent"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="companyName" column="company_name"/>
+        <result property="companyLogo" column="company_logo"/>
+        <result property="clientName" column="client_name"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="isBookmarked" column="is_bookmarked"/>
+        <result property="hasApplied" column="has_applied"/>
+        <result property="bookmarkCount" column="bookmark_count"/>
+        <result property="remoteTools" column="remote_tools"/>
+        <result property="communicationMethods" column="communication_methods"/>
+        <result property="teamSize" column="team_size"/>
+        <result property="developmentMethodology" column="development_methodology"/>
+        <result property="codeReviewProcess" column="code_review_process"/>
+        <result property="workingHours" column="working_hours"/>
+        <result property="flexibleHours" column="flexible_hours"/>
+        <result property="timezone" column="timezone"/>
+        <result property="onsiteRequirements" column="onsite_requirements"/>
+        <result property="onsiteFrequency" column="onsite_frequency"/>
+        <result property="officeLocation" column="office_location"/>
+        <result property="parkingAvailable" column="parking_available"/>
+        <result property="mealProvided" column="meal_provided"/>
+        <result property="equipmentProvided" column="equipment_provided"/>
+        <result property="benefits" column="benefits"/>
+        <result property="preferredWorkingHours" column="preferred_working_hours"/>
+        <result property="deliverables" column="deliverables"/>
+        <result property="projectStages" column="project_stages"/>
+        <result property="urgency" column="urgency"/>
+        <result property="negotiable" column="negotiable"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="budget" column="budget"/>
+        <result property="requirements" column="requirements"/>
+    </resultMap>
+    
+    <!-- 상주/재택 프로젝트 목록 조회 -->
+    <select id="findRemoteProjects" parameterType="map" resultMap="projectResultMap">
+        SELECT 
+            p.id,
+            p.company_id,
+            p.client_id,
+            p.category_id,
+            p.category,
+            p.title,
+            p.description,
+            p.project_type,
+            p.budget_type,
+            p.work_type,
+            p.location,
+            p.budget_min,
+            p.budget_max,
+            p.duration,
+            p.start_date,
+            p.deadline,
+            p.required_skills,
+            p.preferred_skills,
+            p.experience_years,
+            p.experience_level,
+            p.status,
+            p.views,
+            p.applications,
+            p.applications_count,
+            p.is_featured,
+            p.is_urgent,
+            p.created_at,
+            p.updated_at,
+            p.remote_tools,
+            p.communication_methods,
+            p.team_size,
+            p.development_methodology,
+            p.code_review_process,
+            p.working_hours,
+            p.flexible_hours,
+            p.timezone,
+            p.onsite_requirements,
+            p.onsite_frequency,
+            p.office_location,
+            p.parking_available,
+            p.meal_provided,
+            p.equipment_provided,
+            p.benefits,
+            p.preferred_working_hours,
+            p.deliverables,
+            p.project_stages,
+            p.urgency,
+            p.negotiable,
+            p.views as view_count,
+            CONCAT(p.budget_min, '~', p.budget_max) as budget,
+            p.requirements
+            <if test="includeCompany == true">
+            ,c.company_name, c.logo_url as company_logo
+            </if>
+            <if test="includeClient == true">
+            ,cl.username as client_name
+            </if>
+            <if test="includeCategory == true">
+            ,cat.name as category_name
+            </if>
+            <if test="userId != null">
+            ,(SELECT COUNT(*) FROM project_bookmarks pb WHERE pb.project_id = p.id AND pb.user_id = #{userId}) > 0 as is_bookmarked
+            ,(SELECT COUNT(*) FROM project_applications pa WHERE pa.project_id = p.id AND pa.freelancer_id = #{userId}) > 0 as has_applied
+            </if>
+            ,(SELECT COUNT(*) FROM project_bookmarks pb WHERE pb.project_id = p.id) as bookmark_count
+        FROM projects p
+        <if test="includeCompany == true">
+        LEFT JOIN companies c ON p.company_id = c.id
+        </if>
+        <if test="includeClient == true">
+        LEFT JOIN users cl ON p.client_id = cl.id
+        </if>
+        <if test="includeCategory == true">
+        LEFT JOIN categories cat ON p.category_id = cat.id
+        </if>
+        WHERE p.status = 'active'
+        <if test="workType != null">
+            AND p.work_type = #{workType}
+        </if>
+        <if test="location != null">
+            AND p.location LIKE CONCAT('%', #{location}, '%')
+        </if>
+        <if test="search != null">
+            AND (p.title LIKE CONCAT('%', #{search}, '%') 
+            OR p.description LIKE CONCAT('%', #{search}, '%'))
+        </if>
+        <if test="experienceLevel != null">
+            AND p.experience_level = #{experienceLevel}
+        </if>
+        <if test="category != null">
+            AND p.category = #{category}
+        </if>
+        <if test="categoryId != null">
+            AND p.category_id = #{categoryId}
+        </if>
+        <if test="minBudget != null">
+            AND p.budget_max >= #{minBudget}
+        </if>
+        <if test="maxBudget != null">
+            AND p.budget_min &lt;= #{maxBudget}
+        </if>
+        <if test="skills != null and skills.size() > 0">
+            AND (
+            <foreach collection="skills" item="skill" separator=" OR ">
+                JSON_SEARCH(p.required_skills, 'one', #{skill}) IS NOT NULL
+            </foreach>
+            )
+        </if>
+        <if test="remoteTools != null and remoteTools.size() > 0">
+            AND (
+            <foreach collection="remoteTools" item="tool" separator=" OR ">
+                JSON_SEARCH(p.remote_tools, 'one', #{tool}) IS NOT NULL
+            </foreach>
+            )
+        </if>
+        <if test="communicationMethods != null and communicationMethods.size() > 0">
+            AND (
+            <foreach collection="communicationMethods" item="method" separator=" OR ">
+                JSON_SEARCH(p.communication_methods, 'one', #{method}) IS NOT NULL
+            </foreach>
+            )
+        </if>
+        <if test="teamSize != null">
+            AND p.team_size = #{teamSize}
+        </if>
+        <if test="onsiteFrequency != null">
+            AND p.onsite_frequency = #{onsiteFrequency}
+        </if>
+        <if test="flexibleHours != null">
+            AND p.flexible_hours = #{flexibleHours}
+        </if>
+        <if test="parkingAvailable != null">
+            AND p.parking_available = #{parkingAvailable}
+        </if>
+        <if test="mealProvided != null">
+            AND p.meal_provided = #{mealProvided}
+        </if>
+        <if test="urgentOnly == true">
+            AND p.is_urgent = true
+        </if>
+        <if test="featuredOnly == true">
+            AND p.is_featured = true
+        </if>
+        <if test="deadlineWithin != null">
+            AND p.deadline &lt;= DATE_ADD(CURRENT_DATE, INTERVAL #{deadlineWithin} DAY)
+        </if>
+        <choose>
+            <when test="sortBy == 'latest'">
+                ORDER BY p.created_at DESC
+            </when>
+            <when test="sortBy == 'deadline'">
+                ORDER BY p.deadline ASC
+            </when>
+            <when test="sortBy == 'budget_high'">
+                ORDER BY p.budget_max DESC
+            </when>
+            <when test="sortBy == 'budget_low'">
+                ORDER BY p.budget_min ASC
+            </when>
+            <when test="sortBy == 'popular'">
+                ORDER BY p.views DESC, p.applications_count DESC
+            </when>
+            <otherwise>
+                ORDER BY p.created_at DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    
+    <!-- 상주/재택 프로젝트 개수 조회 -->
+    <select id="countRemoteProjects" parameterType="map" resultType="int">
+        SELECT COUNT(DISTINCT p.id)
+        FROM projects p
+        <if test="includeCompany == true">
+        LEFT JOIN companies c ON p.company_id = c.id
+        </if>
+        <if test="includeClient == true">
+        LEFT JOIN users cl ON p.client_id = cl.id
+        </if>
+        <if test="includeCategory == true">
+        LEFT JOIN categories cat ON p.category_id = cat.id
+        </if>
+        WHERE p.status = 'active'
+        <if test="workType != null">
+            AND p.work_type = #{workType}
+        </if>
+        <if test="location != null">
+            AND p.location LIKE CONCAT('%', #{location}, '%')
+        </if>
+        <if test="search != null">
+            AND (p.title LIKE CONCAT('%', #{search}, '%') 
+            OR p.description LIKE CONCAT('%', #{search}, '%'))
+        </if>
+        <if test="experienceLevel != null">
+            AND p.experience_level = #{experienceLevel}
+        </if>
+        <if test="category != null">
+            AND p.category = #{category}
+        </if>
+        <if test="categoryId != null">
+            AND p.category_id = #{categoryId}
+        </if>
+        <if test="minBudget != null">
+            AND p.budget_max >= #{minBudget}
+        </if>
+        <if test="maxBudget != null">
+            AND p.budget_min &lt;= #{maxBudget}
+        </if>
+        <if test="skills != null and skills.size() > 0">
+            AND (
+            <foreach collection="skills" item="skill" separator=" OR ">
+                JSON_SEARCH(p.required_skills, 'one', #{skill}) IS NOT NULL
+            </foreach>
+            )
+        </if>
+        <if test="remoteTools != null and remoteTools.size() > 0">
+            AND (
+            <foreach collection="remoteTools" item="tool" separator=" OR ">
+                JSON_SEARCH(p.remote_tools, 'one', #{tool}) IS NOT NULL
+            </foreach>
+            )
+        </if>
+        <if test="teamSize != null">
+            AND p.team_size = #{teamSize}
+        </if>
+        <if test="onsiteFrequency != null">
+            AND p.onsite_frequency = #{onsiteFrequency}
+        </if>
+        <if test="flexibleHours != null">
+            AND p.flexible_hours = #{flexibleHours}
+        </if>
+        <if test="parkingAvailable != null">
+            AND p.parking_available = #{parkingAvailable}
+        </if>
+        <if test="mealProvided != null">
+            AND p.meal_provided = #{mealProvided}
+        </if>
+        <if test="urgentOnly == true">
+            AND p.is_urgent = true
+        </if>
+        <if test="featuredOnly == true">
+            AND p.is_featured = true
+        </if>
+    </select>
+    
+    <!-- 프로젝트 상세 조회 -->
+    <select id="findById" resultMap="projectResultMap">
+        SELECT 
+            p.*,
+            c.company_name, 
+            c.logo_url as company_logo,
+            u.username as client_name,
+            cat.name as category_name,
+            p.views as view_count,
+            CONCAT(p.budget_min, '~', p.budget_max) as budget
+            <if test="userId != null">
+            ,(SELECT COUNT(*) FROM project_bookmarks pb WHERE pb.project_id = p.id AND pb.user_id = #{userId}) > 0 as is_bookmarked
+            ,(SELECT COUNT(*) FROM project_applications pa WHERE pa.project_id = p.id AND pa.freelancer_id = #{userId}) > 0 as has_applied
+            </if>
+            ,(SELECT COUNT(*) FROM project_bookmarks pb WHERE pb.project_id = p.id) as bookmark_count
+        FROM projects p
+        LEFT JOIN companies c ON p.company_id = c.id
+        LEFT JOIN users u ON p.client_id = u.id
+        LEFT JOIN categories cat ON p.category_id = cat.id
+        WHERE p.id = #{id}
+    </select>
+    
+    <!-- 프로젝트 조회수 증가 -->
+    <update id="incrementViewCount">
+        UPDATE projects 
+        SET views = views + 1 
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 근무 형태별 프로젝트 개수 조회 -->
+    <select id="countByWorkType" resultType="int">
+        SELECT COUNT(*) 
+        FROM projects 
+        WHERE work_type = #{workType} 
+        AND status = 'active'
+    </select>
+    
+    <!-- 지역별 상주 프로젝트 분포 -->
+    <select id="getProjectDistributionByLocation" resultType="map">
+        SELECT 
+            location,
+            COUNT(*) as count
+        FROM projects
+        WHERE work_type IN ('onsite', 'hybrid')
+        AND status = 'active'
+        AND location IS NOT NULL
+        GROUP BY location
+        ORDER BY count DESC
+    </select>
+    
+    <!-- 원격 도구별 프로젝트 분포 -->
+    <select id="getProjectDistributionByRemoteTools" resultType="map">
+        SELECT 
+            JSON_UNQUOTE(JSON_EXTRACT(remote_tools, '$[*]')) as tool,
+            COUNT(*) as count
+        FROM projects
+        WHERE work_type IN ('remote', 'hybrid')
+        AND status = 'active'
+        AND remote_tools IS NOT NULL
+        AND remote_tools != '[]'
+        GROUP BY tool
+        ORDER BY count DESC
+    </select>
+    
+    <!-- 원격근무 프로젝트에서 사용되는 도구 목록 -->
+    <select id="getUniqueRemoteTools" resultType="string">
+        SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(remote_tools, '$[*]')) as tool
+        FROM projects
+        WHERE work_type IN ('remote', 'hybrid')
+        AND status = 'active'
+        AND remote_tools IS NOT NULL
+        AND remote_tools != '[]'
+        ORDER BY tool
+    </select>
+    
+    <!-- 상주근무 프로젝트의 지역 목록 -->
+    <select id="getUniqueOnsiteLocations" resultType="string">
+        SELECT DISTINCT location
+        FROM projects
+        WHERE work_type IN ('onsite', 'hybrid')
+        AND status = 'active'
+        AND location IS NOT NULL
+        ORDER BY location
+    </select>
+    
+    <!-- 팀 규모별 프로젝트 분포 -->
+    <select id="getProjectDistributionByTeamSize" resultType="map">
+        SELECT 
+            team_size,
+            COUNT(*) as count
+        FROM projects
+        WHERE status = 'active'
+        AND team_size IS NOT NULL
+        GROUP BY team_size
+        ORDER BY 
+            CASE team_size
+                WHEN '1-5' THEN 1
+                WHEN '6-10' THEN 2
+                WHEN '11-20' THEN 3
+                WHEN '21-50' THEN 4
+                WHEN '50+' THEN 5
+                ELSE 6
+            END
+    </select>
+    
+    <!-- 유연근무제 여부별 프로젝트 개수 -->
+    <select id="countByFlexibleHours" resultType="map">
+        SELECT 
+            SUM(CASE WHEN flexible_hours = true THEN 1 ELSE 0 END) as flexible,
+            SUM(CASE WHEN flexible_hours = false THEN 1 ELSE 0 END) as fixed
+        FROM projects
+        WHERE status = 'active'
+    </select>
+    
+    <!-- 주차/식사 제공 여부별 상주 프로젝트 개수 -->
+    <select id="countOnsiteBenefits" resultType="map">
+        SELECT 
+            SUM(CASE WHEN parking_available = true THEN 1 ELSE 0 END) as parking,
+            SUM(CASE WHEN meal_provided = true THEN 1 ELSE 0 END) as meal,
+            SUM(CASE WHEN equipment_provided = true THEN 1 ELSE 0 END) as equipment
+        FROM projects
+        WHERE work_type IN ('onsite', 'hybrid')
+        AND status = 'active'
+    </select>
+    
+    <!-- 근무 형태별 평균 예산 -->
+    <select id="getAverageBudgetByWorkType" resultType="map">
+        SELECT 
+            work_type,
+            AVG(budget_min) as avg_min,
+            AVG(budget_max) as avg_max,
+            AVG((budget_min + budget_max) / 2) as avg_budget
+        FROM projects
+        WHERE status = 'active'
+        AND budget_min IS NOT NULL
+        AND budget_max IS NOT NULL
+        GROUP BY work_type
+    </select>
+    
+    <!-- 프로젝트에 사용된 모든 기술 스택 목록 조회 -->
+    <select id="getAllProjectSkills" resultType="string">
+        WITH skill_list AS (
+            SELECT DISTINCT 
+                TRIM(REPLACE(REPLACE(JSON_EXTRACT(required_skills, CONCAT('$[', n.n, ']')), '"', ''), '\\', '')) AS skill
+            FROM projects p
+            CROSS JOIN (
+                SELECT 0 AS n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+                UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9
+                UNION SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14
+                UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19
+            ) n
+            WHERE n.n &lt; JSON_LENGTH(p.required_skills)
+            AND p.required_skills IS NOT NULL
+            AND p.required_skills != '[]'
+            AND p.status = 'active'
+            
+            UNION
+            
+            SELECT DISTINCT 
+                TRIM(REPLACE(REPLACE(JSON_EXTRACT(preferred_skills, CONCAT('$[', n.n, ']')), '"', ''), '\\', '')) AS skill
+            FROM projects p
+            CROSS JOIN (
+                SELECT 0 AS n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
+                UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9
+                UNION SELECT 10 UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14
+                UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19
+            ) n
+            WHERE n.n &lt; JSON_LENGTH(p.preferred_skills)
+            AND p.preferred_skills IS NOT NULL
+            AND p.preferred_skills != '[]'
+            AND p.status = 'active'
+        )
+        SELECT DISTINCT skill
+        FROM skill_list
+        WHERE skill IS NOT NULL
+        AND skill != ''
+        ORDER BY skill
+    </select>
+    
+    <!-- 프로젝트 기술 스택 상위 20개 조회 (프리랜서 화면과 동일한 방식) -->
+    <select id="getTopProjectSkills" resultType="string">
+        SELECT JSON_UNQUOTE(JSON_EXTRACT(p.required_skills, CONCAT('$[', n.digit, ']'))) AS skill,
+               COUNT(*) AS skill_count
+        FROM projects p
+        CROSS JOIN (
+            SELECT 0 AS digit UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL
+            SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL
+            SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL
+            SELECT 15 UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL
+            SELECT 20 UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23 UNION ALL SELECT 24 UNION ALL
+            SELECT 25 UNION ALL SELECT 26 UNION ALL SELECT 27 UNION ALL SELECT 28 UNION ALL SELECT 29 UNION ALL
+            SELECT 30 UNION ALL SELECT 31 UNION ALL SELECT 32 UNION ALL SELECT 33 UNION ALL SELECT 34 UNION ALL
+            SELECT 35 UNION ALL SELECT 36 UNION ALL SELECT 37 UNION ALL SELECT 38 UNION ALL SELECT 39
+        ) n
+        WHERE JSON_EXTRACT(p.required_skills, CONCAT('$[', n.digit, ']')) IS NOT NULL
+        AND p.status = 'active'
+        AND p.work_type IN ('remote', 'full-remote', 'hybrid')
+        GROUP BY skill
+        ORDER BY skill_count DESC
+        LIMIT 20
+    </select>
+    
+</mapper>

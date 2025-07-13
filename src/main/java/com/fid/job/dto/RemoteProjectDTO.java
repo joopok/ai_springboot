@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -190,19 +192,19 @@ public class RemoteProjectDTO {
     
     private static List<String> parseJsonArray(String jsonString) {
         if (jsonString == null || jsonString.isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             return mapper.readValue(jsonString, List.class);
         } catch (Exception e) {
-            return List.of();
+            return new ArrayList<>();
         }
     }
     
     private static List<ProjectStage> parseProjectStages(String jsonString) {
         if (jsonString == null || jsonString.isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -214,9 +216,9 @@ public class RemoteProjectDTO {
                             .duration((String) stage.get("duration"))
                             .status((String) stage.get("status"))
                             .build())
-                    .toList();
+                    .collect(Collectors.toList());
         } catch (Exception e) {
-            return List.of();
+            return new ArrayList<>();
         }
     }
 }

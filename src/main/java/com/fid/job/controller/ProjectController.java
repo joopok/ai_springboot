@@ -2,7 +2,6 @@ package com.fid.job.controller;
 
 import com.fid.job.dto.ApiResponse;
 import com.fid.job.dto.ProjectApplicationRequest;
-import com.fid.job.dto.RemoteProjectDTO;
 import com.fid.job.model.Project;
 import com.fid.job.service.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -313,81 +312,6 @@ public class ProjectController {
         }
     }
     
-    /**
-     * 상주 프로젝트 상세 조회 (원격/상주 근무 특화 정보 포함)
-     */
-    @GetMapping("/athome/{id}")
-    public ResponseEntity<ApiResponse> getRemoteProjectDetail(
-            @PathVariable Long id,
-            HttpServletRequest request) {
-        
-        try {
-            Long userId = getUserIdFromRequest(request);
-            RemoteProjectDTO project = projectService.getRemoteProjectById(id, userId);
-            
-            if (project == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("프로젝트를 찾을 수 없습니다"));
-            }
-            
-            // 조회수 증가
-            projectService.incrementViewCount(id);
-            
-            return ResponseEntity.ok(ApiResponse.success(project, "상주 프로젝트 상세 조회 성공"));
-        } catch (Exception e) {
-            log.error("상주 프로젝트 상세 조회 중 오류 발생 - ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("상주 프로젝트 상세 조회 실패: " + e.getMessage()));
-        }
-    }
-    
-    /**
-     * 상주 프로젝트 목록 조회
-     */
-    @GetMapping("/athome")
-    public ResponseEntity<ApiResponse> getRemoteProjects(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String workType,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) String experienceLevel,
-            @RequestParam(required = false) List<String> skills,
-            @RequestParam(required = false) String teamSize,
-            @RequestParam(required = false) String onsiteFrequency,
-            @RequestParam(required = false) Boolean flexibleHours,
-            @RequestParam(defaultValue = "latest") String sortBy,
-            HttpServletRequest request) {
-        
-        try {
-            Map<String, Object> params = new HashMap<>();
-            params.put("page", page);
-            params.put("limit", limit);
-            params.put("search", search);
-            params.put("workType", workType != null ? workType : "onsite"); // 기본값: 상주
-            params.put("location", location);
-            params.put("experienceLevel", experienceLevel);
-            params.put("skills", skills);
-            params.put("teamSize", teamSize);
-            params.put("onsiteFrequency", onsiteFrequency);
-            params.put("flexibleHours", flexibleHours);
-            params.put("sortBy", sortBy);
-            
-            // 로그인한 사용자 ID 가져오기
-            Long userId = getUserIdFromRequest(request);
-            if (userId != null) {
-                params.put("userId", userId);
-            }
-            
-            Map<String, Object> result = projectService.getRemoteProjects(params);
-            
-            return ResponseEntity.ok(ApiResponse.success(result, "상주 프로젝트 목록 조회 성공"));
-        } catch (Exception e) {
-            log.error("상주 프로젝트 목록 조회 중 오류 발생", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("상주 프로젝트 목록 조회 실패: " + e.getMessage()));
-        }
-    }
     
     /**
      * 프로젝트 질문 목록 조회

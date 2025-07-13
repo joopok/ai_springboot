@@ -183,7 +183,7 @@
 
     <!-- 전체 프리랜서 목록 조회 -->
     <select id="findAll" parameterType="map" resultMap="FreelancerResultMap">
-        SELECT 
+        SELECT SQL_NO_CACHE
         <include refid="BaseColumns"/>
         <include refid="BaseJoins"/>
         <include refid="SearchConditions"/>

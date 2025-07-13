@@ -80,30 +80,6 @@ public class FreelancerController {
     }
 
     /**
-     * 특정 프리랜서 상세 조회
-     * GET /api/freelancers/{id}
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Freelancer>> getFreelancerById(@PathVariable Long id) {
-        try {
-            log.info("프리랜서 상세 조회 요청 - ID: {}", id);
-            
-            Freelancer freelancer = freelancerService.getFreelancerById(id);
-            
-            log.info("프리랜서 상세 조회 성공 - ID: {}, 이름: {}", id, freelancer.getUserFullName());
-            return ResponseEntity.ok(ApiResponse.success(freelancer, "프리랜서 정보를 성공적으로 조회했습니다."));
-            
-        } catch (RuntimeException e) {
-            log.warn("프리랜서 조회 실패 - ID: {}, 오류: {}", id, e.getMessage());
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("프리랜서 상세 조회 중 오류 발생 - ID: {}", id, e);
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("프리랜서 조회 중 오류가 발생했습니다."));
-        }
-    }
-
-    /**
      * 선택된 프리랜서들 조회 (ID 리스트로)
      * GET /api/freelancers/selected
      */
@@ -345,6 +321,30 @@ public class FreelancerController {
             log.error("프리랜서 기술 스택 목록 조회 중 오류 발생", e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("프리랜서 기술 스택 목록 조회 중 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 특정 프리랜서 상세 조회
+     * GET /api/freelancers/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Freelancer>> getFreelancerById(@PathVariable Long id) {
+        try {
+            log.info("프리랜서 상세 조회 요청 - ID: {}", id);
+            
+            Freelancer freelancer = freelancerService.getFreelancerById(id);
+            
+            log.info("프리랜서 상세 조회 성공 - ID: {}, 이름: {}", id, freelancer.getUserFullName());
+            return ResponseEntity.ok(ApiResponse.success(freelancer, "프리랜서 정보를 성공적으로 조회했습니다."));
+            
+        } catch (RuntimeException e) {
+            log.warn("프리랜서 조회 실패 - ID: {}, 오류: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("프리랜서 상세 조회 중 오류 발생 - ID: {}", id, e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("프리랜서 조회 중 오류가 발생했습니다."));
         }
     }
 }

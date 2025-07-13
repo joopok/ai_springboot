@@ -1,8 +1,8 @@
 package com.fid.job.service;
 
-import com.fid.job.dto.RemoteProjectDTO;
 import com.fid.job.mapper.ProjectMapper;
 import com.fid.job.model.Project;
+import com.fid.job.util.JsonSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -69,11 +70,17 @@ public class ProjectServiceImpl implements ProjectService {
         }
         
         List<Project> projects = projectMapper.findAll(params);
+        
+        // Sanitize project data
+        List<Project> sanitizedProjects = projects.stream()
+            .map(this::sanitizeProject)
+            .collect(Collectors.toList());
+        
         int totalCount = projectMapper.countAll(params);
         int totalPages = (int) Math.ceil((double) totalCount / limit);
         
         Map<String, Object> result = new HashMap<>();
-        result.put("projects", projects);
+        result.put("projects", sanitizedProjects);
         result.put("totalCount", totalCount);
         result.put("totalPages", totalPages);
         result.put("currentPage", page);
@@ -98,7 +105,21 @@ public class ProjectServiceImpl implements ProjectService {
             throw new RuntimeException("프로젝트를 찾을 수 없습니다.");
         }
         
-        return project;
+        return sanitizeProject(project);
+    }
+    
+    @Override
+    public Project getProjectById(Long id) {
+        log.info("프로젝트 상세 조회 (WebSocket용) - ID: {}", id);
+        
+        // 프로젝트 조회 (userId 없이)
+        Project project = projectMapper.findById(id, null);
+        if (project == null) {
+            log.warn("프로젝트를 찾을 수 없음 - ID: {}", id);
+            throw new RuntimeException("프로젝트를 찾을 수 없습니다.");
+        }
+        
+        return sanitizeProject(project);
     }
     
     @Override
@@ -246,55 +267,6 @@ public class ProjectServiceImpl implements ProjectService {
         return baseUrl + "/project/" + projectId;
     }
     
-    @Override
-    @Transactional
-    public RemoteProjectDTO getRemoteProjectById(Long id, Long userId) {
-        log.info("상주 프로젝트 상세 조회 - ID: {}, User ID: {}", id, userId);
-        
-        // 프로젝트 조회 (userId 전달)
-        Project project = projectMapper.findById(id, userId);
-        if (project == null) {
-            log.warn("상주 프로젝트를 찾을 수 없음 - ID: {}", id);
-            return null;
-        }
-        
-        // Project를 RemoteProjectDTO로 변환
-        RemoteProjectDTO remoteProject = RemoteProjectDTO.fromProject(project);
-        
-        // 클라이언트 정보 보강 (필요시)
-        if (remoteProject.getClient() != null) {
-            // 실제 클라이언트 정보 조회 로직 추가 가능
-            remoteProject.getClient().setRating(4.5);
-            remoteProject.getClient().setReviewCount(12);
-            remoteProject.getClient().setProjectsCompleted(8);
-            remoteProject.getClient().setVerificationStatus("verified");
-        }
-        
-        return remoteProject;
-    }
-    
-    @Override
-    public Map<String, Object> getRemoteProjects(Map<String, Object> params) {
-        log.info("상주 프로젝트 목록 조회 - 파라미터: {}", params);
-        
-        // workType이 지정되지 않은 경우 onsite로 필터링
-        if (params.get("workType") == null) {
-            params.put("workType", "onsite");
-        }
-        
-        // 일반 프로젝트 목록 조회 로직 재사용
-        Map<String, Object> result = getAllProjects(params);
-        
-        // RemoteProjectDTO로 변환
-        List<Project> projects = (List<Project>) result.get("projects");
-        List<RemoteProjectDTO> remoteProjects = projects.stream()
-                .map(RemoteProjectDTO::fromProject)
-                .collect(java.util.stream.Collectors.toList());
-        
-        result.put("projects", remoteProjects);
-        
-        return result;
-    }
     
     @Override
     @Transactional
@@ -430,5 +402,51 @@ public class ProjectServiceImpl implements ProjectService {
         params.put("rating", rating);
         
         projectMapper.insertProjectReview(params);
+    }
+    
+    /**
+     * Sanitize project data to remove invalid characters
+     */
+    private Project sanitizeProject(Project project) {
+        if (project == null) {
+            return null;
+        }
+        
+        // Sanitize all string fields
+        project.setTitle(JsonSanitizer.sanitize(project.getTitle()));
+        project.setDescription(JsonSanitizer.sanitize(project.getDescription()));
+        project.setCategory(JsonSanitizer.sanitize(project.getCategory()));
+        project.setProjectType(JsonSanitizer.sanitize(project.getProjectType()));
+        project.setBudgetType(JsonSanitizer.sanitize(project.getBudgetType()));
+        project.setWorkType(JsonSanitizer.sanitize(project.getWorkType()));
+        project.setLocation(JsonSanitizer.sanitize(project.getLocation()));
+        project.setDuration(JsonSanitizer.sanitize(project.getDuration()));
+        project.setRequiredSkills(JsonSanitizer.sanitize(project.getRequiredSkills()));
+        project.setPreferredSkills(JsonSanitizer.sanitize(project.getPreferredSkills()));
+        project.setExperienceLevel(JsonSanitizer.sanitize(project.getExperienceLevel()));
+        project.setStatus(JsonSanitizer.sanitize(project.getStatus()));
+        project.setCompanyName(JsonSanitizer.sanitize(project.getCompanyName()));
+        project.setCompanyLogo(JsonSanitizer.sanitize(project.getCompanyLogo()));
+        project.setClientName(JsonSanitizer.sanitize(project.getClientName()));
+        project.setCategoryName(JsonSanitizer.sanitize(project.getCategoryName()));
+        project.setRemoteTools(JsonSanitizer.sanitize(project.getRemoteTools()));
+        project.setCommunicationMethods(JsonSanitizer.sanitize(project.getCommunicationMethods()));
+        project.setTeamSize(JsonSanitizer.sanitize(project.getTeamSize()));
+        project.setDevelopmentMethodology(JsonSanitizer.sanitize(project.getDevelopmentMethodology()));
+        project.setCodeReviewProcess(JsonSanitizer.sanitize(project.getCodeReviewProcess()));
+        project.setWorkingHours(JsonSanitizer.sanitize(project.getWorkingHours()));
+        project.setTimezone(JsonSanitizer.sanitize(project.getTimezone()));
+        project.setOnsiteRequirements(JsonSanitizer.sanitize(project.getOnsiteRequirements()));
+        project.setOnsiteFrequency(JsonSanitizer.sanitize(project.getOnsiteFrequency()));
+        project.setOfficeLocation(JsonSanitizer.sanitize(project.getOfficeLocation()));
+        project.setBenefits(JsonSanitizer.sanitize(project.getBenefits()));
+        project.setPreferredWorkingHours(JsonSanitizer.sanitize(project.getPreferredWorkingHours()));
+        project.setDeliverables(JsonSanitizer.sanitize(project.getDeliverables()));
+        project.setProjectStages(JsonSanitizer.sanitize(project.getProjectStages()));
+        project.setUrgency(JsonSanitizer.sanitize(project.getUrgency()));
+        project.setBudget(JsonSanitizer.sanitize(project.getBudget()));
+        project.setRequirements(JsonSanitizer.sanitize(project.getRequirements()));
+        
+        return project;
     }
 }

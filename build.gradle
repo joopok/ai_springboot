@@ -50,6 +50,9 @@ dependencies {
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
     
+    // Socket.io
+    implementation 'com.corundumstudio.socketio:netty-socketio:1.7.23'
+    
     // Lombok
     implementation 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
