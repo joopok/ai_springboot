@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(git remote:*)",
+      "Bash(ssh:*)",
+      "Bash(git fetch:*)",
+      "Bash(telnet:*)"
+    ],
+    "deny": []
+  }
+}

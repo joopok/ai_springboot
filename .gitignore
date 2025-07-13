@@ -8,6 +8,9 @@ pom.xml
 .project
 .classpath
 .factorypath
+.gradle/
+.vscode/
+.classpath
 
 # Logs
 logs/
