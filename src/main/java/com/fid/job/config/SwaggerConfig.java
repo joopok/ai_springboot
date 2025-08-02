@@ -28,8 +28,8 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(apiInfo())
                 .servers(Arrays.asList(
-                    new Server().url("http://localhost:8080").description("Local Development Server"),
-                    new Server().url("http://192.168.0.109:8080").description("Synology Production Server")
+                    new Server().url("http://localhost:9090").description("Local Development Server"),
+                    new Server().url("http://192.168.0.109:9090").description("Synology Production Server")
                 ))
                 .components(new Components()
                     .addSecuritySchemes(SECURITY_SCHEME_NAME,
