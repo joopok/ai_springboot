@@ -118,6 +118,20 @@ management:
     health:
       show-details: when_authorized
 
+# SpringDoc OpenAPI 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    disable-swagger-default-url: true
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
 # Custom Application Properties
 app:
   name: JobKorea Billboard Backend

@@ -6,7 +6,8 @@
       "Bash(git remote:*)",
       "Bash(ssh:*)",
       "Bash(git fetch:*)",
-      "Bash(telnet:*)"
+      "Bash(telnet:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
