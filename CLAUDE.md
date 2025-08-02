@@ -217,5 +217,15 @@ When working with **DDL, DML, DCL, database**:
 - Reference: `/Users/doseunghyeon/developerApp/JAVA/project_ai01/database`
 - Database name: `jobtracker`
 
-*Last Updated: 2025-01-03*
-*Version: 3.1 - Enhanced with database schema alignment*
+## 서버 명령어 실행 형식
+
+서버에서 입력할 내용은 다음 형식으로 제공:
+
+<------시작------>
+명령어 내용
+<------종료------>
+
+반드시 개행처리하여 쉽게 구분할 수 있도록 표시
+
+*Last Updated: 2025-08-02*
+*Version: 4.1 - Added server command formatting rules*
