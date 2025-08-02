@@ -10,6 +10,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.Components;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springdoc.core.GroupedOpenApi;
 
 import java.util.Arrays;
 
@@ -40,6 +41,14 @@ public class SwaggerConfig {
                     )
                 )
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
+    }
+    
+    @Bean
+    public GroupedOpenApi publicApi() {
+        return GroupedOpenApi.builder()
+                .group("public")
+                .pathsToMatch("/api/**")
+                .build();
     }
     
     private Info apiInfo() {

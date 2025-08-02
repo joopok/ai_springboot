@@ -7,7 +7,8 @@
       "Bash(ssh:*)",
       "Bash(git fetch:*)",
       "Bash(telnet:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }
