@@ -1,0 +1,59 @@
+# Git 관련
+.git
+.gitignore
+.gitattributes
+README.md
+CLAUDE.md
+GEMINI.md
+
+# Gradle 빌드 제외 (JAR 파일만 포함)
+.gradle
+gradle/
+gradlew
+gradlew.bat
+settings.gradle
+
+# 소스 코드 (빌드된 JAR만 사용)
+src/
+build/classes/
+build/generated/
+build/resources/
+build/tmp/
+build/bootJarMainClassName
+
+# 로그 파일
+logs/
+*.log
+application.log
+
+# IDE 설정
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS 관련
+.DS_Store
+Thumbs.db
+
+# 테스트 관련
+build/reports/
+build/test-results/
+
+# 임시 파일
+*.tmp
+*.temp
+
+# 설정 파일 (민감한 정보)
+mcp-settings.json
+
+# 이미지 파일
+*.jpeg
+*.jpg
+*.png
+*.gif
+
+# TypeScript 설정 (서버용이므로 불필요)
+*.ts
+project-interfaces.ts
